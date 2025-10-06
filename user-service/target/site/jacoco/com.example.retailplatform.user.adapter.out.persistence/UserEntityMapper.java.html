@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserEntityMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">user-service</a> &gt; <a href="index.source.html" class="el_package">com.example.retailplatform.user.adapter.out.persistence</a> &gt; <span class="el_source">UserEntityMapper.java</span></div><h1>UserEntityMapper.java</h1><pre class="source lang-java linenums">package com.example.retailplatform.user.adapter.out.persistence;
+
+import com.example.retailplatform.user.domain.model.User;
+import org.springframework.stereotype.Component;
+
+@Component
+<span class="fc" id="L7">public class UserEntityMapper {</span>
+
+    public User toModel(UserEntity entity) {
+<span class="pc bpc" id="L10" title="1 of 2 branches missed.">        if (entity == null) return null;</span>
+
+<span class="fc" id="L12">        return User.builder()</span>
+<span class="pc bpc" id="L13" title="1 of 2 branches missed.">                .id(entity.getId() != null ? entity.getId().toString() : null)</span>
+<span class="fc" id="L14">                .firstName(entity.getFirstName())</span>
+<span class="fc" id="L15">                .lastName(entity.getLastName())</span>
+<span class="fc" id="L16">                .username(entity.getUsername())</span>
+<span class="fc" id="L17">                .email(entity.getEmail())</span>
+<span class="fc" id="L18">                .phoneNumber(entity.getPhoneNumber())</span>
+<span class="fc" id="L19">                .status(entity.getStatus())</span>
+<span class="fc" id="L20">                .role(entity.getRole())</span>
+<span class="pc bpc" id="L21" title="1 of 2 branches missed.">                .active(!entity.isDeleted()) // convert deleted -&gt; active</span>
+<span class="fc" id="L22">                .build();</span>
+    }
+
+    public UserEntity toEntity(User user) {
+<span class="pc bpc" id="L26" title="1 of 2 branches missed.">        if (user == null) return null;</span>
+
+<span class="fc" id="L28">        UserEntity.UserEntityBuilder builder = UserEntity.builder()</span>
+<span class="fc" id="L29">                .firstName(user.getFirstName())</span>
+<span class="fc" id="L30">                .lastName(user.getLastName())</span>
+<span class="fc" id="L31">                .username(user.getUsername())</span>
+<span class="fc" id="L32">                .email(user.getEmail())</span>
+<span class="fc" id="L33">                .phoneNumber(user.getPhoneNumber())</span>
+<span class="fc" id="L34">                .status(user.getStatus())</span>
+<span class="fc" id="L35">                .role(user.getRole());</span>
+
+        // map active -&gt; deleted only if active is non-null; otherwise keep default/DB value
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">        if (user.getActive() != null) {</span>
+<span class="pc bpc" id="L39" title="1 of 2 branches missed.">            builder.deleted(!user.getActive());</span>
+        }
+
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">        if (user.getId() != null) {</span>
+            try {
+<span class="nc" id="L44">                builder.id(Long.parseLong(user.getId()));</span>
+<span class="nc" id="L45">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L46">                throw new IllegalArgumentException(&quot;Invalid user ID: &quot; + user.getId());</span>
+<span class="nc" id="L47">            }</span>
+        }
+
+<span class="fc" id="L50">        return builder.build();</span>
+    }
+
+    /**
+     * Apply non-null fields from domain User into existing entity (for PATCH).
+     * Does NOT overwrite createdAt or createdBy.
+     */
+    public void updateEntityFromModel(User user, UserEntity entity) {
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        if (user.getFirstName() != null) entity.setFirstName(user.getFirstName());</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (user.getLastName() != null) entity.setLastName(user.getLastName());</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (user.getUsername() != null) entity.setUsername(user.getUsername());</span>
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">        if (user.getEmail() != null) entity.setEmail(user.getEmail());</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">        if (user.getPhoneNumber() != null) entity.setPhoneNumber(user.getPhoneNumber());</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">        if (user.getStatus() != null) entity.setStatus(user.getStatus());</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        if (user.getRole() != null) entity.setRole(user.getRole());</span>
+        // active is nullable: only update deleted flag if active != null
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        if (user.getActive() != null) {</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">            entity.setDeleted(!user.getActive());</span>
+        }
+<span class="fc" id="L69">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

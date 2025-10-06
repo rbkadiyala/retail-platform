@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ErrorResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">user-service</a> &gt; <a href="index.source.html" class="el_package">com.example.retailplatform.user.common</a> &gt; <span class="el_source">ErrorResponse.java</span></div><h1>ErrorResponse.java</h1><pre class="source lang-java linenums">package com.example.retailplatform.user.common;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ErrorResponse {
+    private Instant timestamp;
+    private int status;
+    private String error;
+    private String message; 
+    private String key;     
+    private String field;
+    private String path;
+
+    @JsonProperty(&quot;errors&quot;) // Serialize validationErrors as &quot;errors&quot; in JSON
+    private List&lt;ValidationError&gt; validationErrors;
+
+    public List&lt;ValidationError&gt; getValidationErrors() {
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        return validationErrors == null ? null : Collections.unmodifiableList(validationErrors);</span>
+    }
+
+    public void setValidationErrors(List&lt;ValidationError&gt; validationErrors) {
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        this.validationErrors = validationErrors == null ? null : new ArrayList&lt;&gt;(validationErrors);</span>
+<span class="nc" id="L36">    }</span>
+
+    public static class ErrorResponseBuilder {
+        public ErrorResponseBuilder validationErrors(List&lt;ValidationError&gt; validationErrors) {
+<span class="fc bfc" id="L40" title="All 2 branches covered.">            this.validationErrors = validationErrors == null ? null : new ArrayList&lt;&gt;(validationErrors);</span>
+<span class="fc" id="L41">            return this;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

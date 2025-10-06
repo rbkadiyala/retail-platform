@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<BugCollection version='4.7.3' threshold='low' effort='max'><Error></Error><Project><SrcDir>D:\User\devops\retail-platform\user-service\src\main\java</SrcDir><SrcDir>D:\User\devops\retail-platform\user-service\target\generated-sources\annotations</SrcDir><SrcDir>D:\User\devops\retail-platform\user-service\src\test\java</SrcDir><SrcDir>D:\User\devops\retail-platform\user-service\target\generated-test-sources\test-annotations</SrcDir></Project></BugCollection>

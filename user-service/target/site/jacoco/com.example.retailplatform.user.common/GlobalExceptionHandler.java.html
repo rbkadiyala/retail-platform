@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GlobalExceptionHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">user-service</a> &gt; <a href="index.source.html" class="el_package">com.example.retailplatform.user.common</a> &gt; <span class="el_source">GlobalExceptionHandler.java</span></div><h1>GlobalExceptionHandler.java</h1><pre class="source lang-java linenums">package com.example.retailplatform.user.common;
+
+import com.example.retailplatform.user.domain.UserConstants;
+import com.example.retailplatform.user.domain.exception.ResourceAlreadyExistsException;
+import com.example.retailplatform.user.domain.exception.ResourceNotFoundException;
+import jakarta.persistence.PersistenceException;
+import jakarta.servlet.http.HttpServletRequest;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+<span class="fc" id="L27">    private static final Logger appLogger = LogManager.getLogger(&quot;com.example.retailplatform&quot;);</span>
+
+    private final MessageSource messageSource;
+
+<span class="fc" id="L31">    public GlobalExceptionHandler(MessageSource messageSource) {</span>
+<span class="fc" id="L32">        this.messageSource = messageSource;</span>
+<span class="fc" id="L33">    }</span>
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        String key = ex.getKey() != null ? ex.getKey() : UserConstants.USER_NOT_FOUND_KEY;</span>
+<span class="fc" id="L38">        String message = getMessage(key);</span>
+<span class="fc" id="L39">        return buildErrorResponse(HttpStatus.NOT_FOUND, message, key, request.getRequestURI(), null, null, ex);</span>
+    }
+
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleResourceAlreadyExists(ResourceAlreadyExistsException ex, HttpServletRequest request) {
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        String key = ex.getKey() != null ? ex.getKey() : UserConstants.USER_ALREADY_EXISTS_KEY;</span>
+<span class="nc" id="L45">        String message = getMessage(key);</span>
+<span class="nc" id="L46">        return buildErrorResponse(HttpStatus.CONFLICT, message, key, request.getRequestURI(), ex.getField(), null, ex);</span>
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleValidationException(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request) {
+
+<span class="fc" id="L54">        List&lt;ValidationError&gt; validationErrors = ex.getBindingResult()</span>
+<span class="fc" id="L55">                .getFieldErrors()</span>
+<span class="fc" id="L56">                .stream()</span>
+<span class="fc" id="L57">                .map(this::mapFieldError)</span>
+<span class="fc" id="L58">                .collect(Collectors.toList());</span>
+
+<span class="fc" id="L60">        String key = UserConstants.VALIDATION_FAILED_KEY;</span>
+<span class="fc" id="L61">        String message = getMessage(key, new Object[]{validationErrors.size()});</span>
+
+        // Return 400 instead of 422
+<span class="fc" id="L64">        return buildErrorResponse(</span>
+                HttpStatus.BAD_REQUEST,
+                message,
+                key,
+<span class="fc" id="L68">                request.getRequestURI(),</span>
+                null,
+                validationErrors,
+                ex
+        );
+    }
+    
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest request) {
+<span class="nc" id="L77">        String key = UserConstants.CONSTRAINT_VIOLATION_KEY;</span>
+<span class="nc" id="L78">        String message = getMessage(key);</span>
+<span class="nc" id="L79">        return buildErrorResponse(HttpStatus.CONFLICT, message, key, request.getRequestURI(), null, null, ex);</span>
+    }
+
+    @ExceptionHandler(PersistenceException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handlePersistenceException(PersistenceException ex, HttpServletRequest request) {
+<span class="nc" id="L84">        String key = UserConstants.PERSISTENCE_EXCEPTION_KEY;</span>
+<span class="nc" id="L85">        String message = getMessage(key);</span>
+<span class="nc" id="L86">        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, request.getRequestURI(), null, null, ex);</span>
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleRuntimeException(RuntimeException ex, HttpServletRequest request) {
+<span class="nc" id="L91">        String key = UserConstants.RUNTIME_EXCEPTION_KEY;</span>
+<span class="nc" id="L92">        String message = getMessage(key);</span>
+<span class="nc" id="L93">        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, request.getRequestURI(), null, null, ex);</span>
+    }    
+
+    // ---------------- Generic error builder ----------------
+    private ResponseEntity&lt;ErrorResponse&gt; buildErrorResponse(HttpStatus status, String message, String key, String path,
+                                                             String field, List&lt;ValidationError&gt; validationErrors, Exception ex) {
+<span class="fc" id="L99">        ErrorResponse error = ErrorResponse.builder()</span>
+<span class="fc" id="L100">                .timestamp(Instant.now())</span>
+<span class="fc" id="L101">                .status(status.value())</span>
+<span class="fc" id="L102">                .error(status.getReasonPhrase())</span>
+<span class="fc" id="L103">                .message(message)</span>
+<span class="fc" id="L104">                .key(key)</span>
+<span class="fc" id="L105">                .field(field)</span>
+<span class="fc" id="L106">                .path(path)</span>
+<span class="fc" id="L107">                .validationErrors(validationErrors)</span>
+<span class="fc" id="L108">                .build();</span>
+
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        if (status.is4xxClientError()) {</span>
+<span class="fc" id="L111">            appLogger.warn(&quot;{}&quot;, error, ex);</span>
+        } else {
+<span class="nc" id="L113">            appLogger.error(&quot;{}&quot;, error, ex);</span>
+        }
+
+<span class="fc" id="L116">        return ResponseEntity.status(status).body(error);</span>
+    }
+
+    private ValidationError mapFieldError(FieldError fieldError) {
+<span class="fc" id="L120">        return ValidationError.builder()</span>
+<span class="fc" id="L121">                .field(fieldError.getField())</span>
+<span class="fc" id="L122">                .value(fieldError.getRejectedValue())</span>
+<span class="fc" id="L123">                .message(fieldError.getDefaultMessage())</span>
+<span class="fc" id="L124">                .build();</span>
+    }
+
+    // ---------------- i18n message helper ----------------
+    private String getMessage(String key, Object... args) {
+<span class="fc" id="L129">        String msg = messageSource.getMessage(key, args, key, LocaleContextHolder.getLocale());</span>
+<span class="fc" id="L130">        System.out.println(&quot;Resolved message for key '&quot; + key + &quot;' with locale &quot; + LocaleContextHolder.getLocale() + &quot; : &quot; + msg);</span>
+<span class="fc" id="L131">        return msg;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

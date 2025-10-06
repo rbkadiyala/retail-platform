@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserRepositoryAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">user-service</a> &gt; <a href="index.source.html" class="el_package">com.example.retailplatform.user.adapter.out.persistence</a> &gt; <span class="el_source">UserRepositoryAdapter.java</span></div><h1>UserRepositoryAdapter.java</h1><pre class="source lang-java linenums">package com.example.retailplatform.user.adapter.out.persistence;
+
+import com.example.retailplatform.user.domain.model.User;
+import com.example.retailplatform.user.domain.exception.ResourceNotFoundException;
+
+import com.example.retailplatform.user.domain.port.out.UserRepositoryPort;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class UserRepositoryAdapter implements UserRepositoryPort {
+
+    private final UserJpaRepository jpaRepository;
+    private final UserEntityMapper entityMapper;
+
+    @Override
+    public User save(User user) {
+<span class="fc" id="L22">        UserEntity entity = entityMapper.toEntity(user);</span>
+<span class="fc" id="L23">        UserEntity saved = jpaRepository.save(entity);</span>
+<span class="fc" id="L24">        return entityMapper.toModel(saved);</span>
+    }
+
+    @Override
+    public List&lt;User&gt; findAllActive() {
+<span class="nc" id="L29">        return jpaRepository.findAllActive().stream()</span>
+<span class="nc" id="L30">                .map(entityMapper::toModel)</span>
+<span class="nc" id="L31">                .collect(Collectors.toList());</span>
+    }
+
+    @Override
+    public Optional&lt;User&gt; findActiveById(String id) {
+<span class="fc" id="L36">        return jpaRepository.findActiveById(parseId(id))</span>
+<span class="fc" id="L37">                .map(entityMapper::toModel);</span>
+    }
+
+    @Override
+    public Optional&lt;User&gt; findActiveByUsername(String username) {
+<span class="fc" id="L42">        return jpaRepository.findActiveByUsername(username)</span>
+<span class="fc" id="L43">                .map(entityMapper::toModel);</span>
+    }
+
+    @Override
+    public Optional&lt;User&gt; findActiveByEmail(String email) {
+<span class="fc" id="L48">        return jpaRepository.findActiveByEmail(email)</span>
+<span class="fc" id="L49">                .map(entityMapper::toModel);</span>
+    }
+
+    @Override
+    public Optional&lt;User&gt; findActiveByPhoneNumber(String phoneNumber) {
+<span class="fc" id="L54">        return jpaRepository.findActiveByPhoneNumber(phoneNumber)</span>
+<span class="fc" id="L55">                .map(entityMapper::toModel);</span>
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+<span class="fc" id="L60">        return jpaRepository.existsByUsername(username);</span>
+    }
+
+    @Override
+    public boolean existsByActiveEmail(String email) {
+<span class="fc" id="L65">        return jpaRepository.existsByActiveEmail(email);</span>
+    }
+
+    @Override
+    public boolean existsByActivePhoneNumber(String phoneNumber) {
+<span class="fc" id="L70">        return jpaRepository.existsByActivePhoneNumber(phoneNumber);</span>
+    }
+
+    @Override
+    public User patch(User user) {
+<span class="fc" id="L75">        Long pk = parseId(user.getId());</span>
+<span class="fc" id="L76">        UserEntity entity = jpaRepository.findActiveById(pk)</span>
+<span class="pc" id="L77">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Active user not found: &quot; + user.getId()));</span>
+
+<span class="fc" id="L79">        entityMapper.updateEntityFromModel(user, entity);</span>
+<span class="fc" id="L80">        UserEntity saved = jpaRepository.save(entity);</span>
+<span class="fc" id="L81">        return entityMapper.toModel(saved);</span>
+    }
+
+    @Override
+    public void softDelete(String id) {
+<span class="fc" id="L86">        Long pk = parseId(id);</span>
+<span class="fc" id="L87">        jpaRepository.findActiveById(pk).ifPresent(entity -&gt; {</span>
+<span class="fc" id="L88">            entity.softDelete();</span>
+<span class="fc" id="L89">            jpaRepository.save(entity);</span>
+<span class="fc" id="L90">        });</span>
+<span class="fc" id="L91">    }</span>
+
+    private Long parseId(String id) {
+        try {
+<span class="fc" id="L95">            return Long.parseLong(id);</span>
+<span class="nc" id="L96">        } catch (Exception e) {</span>
+<span class="nc" id="L97">            throw new IllegalArgumentException(&quot;Invalid ID: &quot; + id);</span>
+        }
+    }
+}
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

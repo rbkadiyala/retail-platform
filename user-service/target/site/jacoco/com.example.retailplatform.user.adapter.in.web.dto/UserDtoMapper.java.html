@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDtoMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">user-service</a> &gt; <a href="index.source.html" class="el_package">com.example.retailplatform.user.adapter.in.web.dto</a> &gt; <span class="el_source">UserDtoMapper.java</span></div><h1>UserDtoMapper.java</h1><pre class="source lang-java linenums">package com.example.retailplatform.user.adapter.in.web.dto;
+
+import com.example.retailplatform.user.domain.model.User;
+import org.springframework.stereotype.Component;
+
+@Component
+<span class="fc" id="L7">public class UserDtoMapper {</span>
+
+    public User toModel(UserRequest request) {
+<span class="fc bfc" id="L10" title="All 2 branches covered.">        if (request == null) return null;</span>
+<span class="fc" id="L11">        return User.builder()</span>
+<span class="fc" id="L12">                .firstName(request.getFirstName())</span>
+<span class="fc" id="L13">                .lastName(request.getLastName())</span>
+<span class="fc" id="L14">                .username(request.getUsername())</span>
+<span class="fc" id="L15">                .email(request.getEmail())</span>
+<span class="fc" id="L16">                .phoneNumber(request.getPhoneNumber())</span>
+<span class="fc" id="L17">                .status(request.getStatus())</span>
+<span class="fc" id="L18">                .role(request.getRole())</span>
+<span class="pc bpc" id="L19" title="1 of 2 branches missed.">                .active(request.getActive() != null ? request.getActive() : true)</span>
+<span class="fc" id="L20">                .build();</span>
+    }
+
+    public UserResponse toResponse(User user) {
+<span class="fc bfc" id="L24" title="All 2 branches covered.">        if (user == null) return null;</span>
+<span class="fc" id="L25">        return UserResponse.builder()</span>
+<span class="fc" id="L26">                .id(user.getId())</span>
+<span class="fc" id="L27">                .firstName(user.getFirstName())</span>
+<span class="fc" id="L28">                .lastName(user.getLastName())</span>
+<span class="fc" id="L29">                .username(user.getUsername())</span>
+<span class="fc" id="L30">                .email(user.getEmail())</span>
+<span class="fc" id="L31">                .phoneNumber(user.getPhoneNumber())</span>
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">                .status(user.getStatus() != null ? user.getStatus().name() : null)</span>
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">                .role(user.getRole() != null ? user.getRole().name() : null)</span>
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">                .active(user.getActive() != null ? user.getActive() : true)</span>
+<span class="fc" id="L35">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

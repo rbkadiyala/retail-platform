@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoadUserDatabase.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">user-service</a> &gt; <a href="index.source.html" class="el_package">com.example.retailplatform.user.adapter.in.web</a> &gt; <span class="el_source">LoadUserDatabase.java</span></div><h1>LoadUserDatabase.java</h1><pre class="source lang-java linenums">package com.example.retailplatform.user.adapter.in.web;
+
+import com.example.retailplatform.user.domain.model.Role;
+import com.example.retailplatform.user.domain.model.Status;
+import com.example.retailplatform.user.domain.model.User;
+import com.example.retailplatform.user.domain.port.out.UserRepositoryPort;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
+@Configuration
+@RequiredArgsConstructor
+public class LoadUserDatabase {
+
+<span class="fc" id="L19">    private static final Logger log = LoggerFactory.getLogger(LoadUserDatabase.class);</span>
+    private final UserRepositoryPort userRepository;
+
+    /**
+     * Always ensures a fallback admin user exists (in all environments).
+     */
+    @Bean
+    CommandLineRunner initAdminUser() {
+<span class="fc" id="L27">        return args -&gt; {</span>
+<span class="fc" id="L28">            userRepository.findActiveByUsername(&quot;admin&quot;).ifPresentOrElse(</span>
+<span class="fc" id="L29">                existing -&gt; log.info(&quot;Admin already exists: {}&quot;, existing),</span>
+                () -&gt; {
+<span class="fc" id="L31">                    User admin = new User(</span>
+                            null,
+                            &quot;System&quot;,
+                            &quot;Admin&quot;,
+                            &quot;admin&quot;,
+                            &quot;admin@example.com&quot;,
+                            &quot;0000000000&quot;,
+                            Status.ACTIVE,
+                            Role.ADMIN,
+<span class="fc" id="L40">                            true</span>
+                    );
+<span class="fc" id="L42">                    User savedAdmin = userRepository.save(admin);</span>
+<span class="fc" id="L43">                    log.info(&quot;Created fallback admin user: {}&quot;, savedAdmin);</span>
+<span class="fc" id="L44">                }</span>
+            );
+<span class="fc" id="L46">        };</span>
+    }
+
+    /**
+     * Creates predefined demo users — runs only in 'dev' or 'test' profiles.
+     */
+    @Bean
+    @Profile({&quot;dev&quot;, &quot;test&quot;})
+    CommandLineRunner initDemoUsers() {
+<span class="nc" id="L55">        return args -&gt; {</span>
+<span class="nc" id="L56">            createUserIfNotExists(&quot;alice.smith&quot;, &quot;Alice&quot;, &quot;Smith&quot;, &quot;alice@example.com&quot;, &quot;1234567890&quot;, Role.USER);</span>
+<span class="nc" id="L57">            createUserIfNotExists(&quot;bob.johnson&quot;, &quot;Bob&quot;, &quot;Johnson&quot;, &quot;bob@example.com&quot;, &quot;0987654321&quot;, Role.ADMIN);</span>
+<span class="nc" id="L58">            createUserIfNotExists(&quot;carol.williams&quot;, &quot;Carol&quot;, &quot;Williams&quot;, &quot;carol@example.com&quot;, &quot;1112223333&quot;, Role.ADMIN);</span>
+
+<span class="nc" id="L60">            userRepository.findAllActive().forEach(user -&gt; log.info(&quot;Preloaded user: {}&quot;, user));</span>
+<span class="nc" id="L61">        };</span>
+    }
+
+    private void createUserIfNotExists(String username,
+                                       String firstName,
+                                       String lastName,
+                                       String email,
+                                       String phoneNumber,
+                                       Role role) {
+<span class="nc" id="L70">        userRepository.findActiveByUsername(username).ifPresentOrElse(</span>
+<span class="nc" id="L71">            existing -&gt; log.info(&quot;User already exists: {}&quot;, existing),</span>
+            () -&gt; {
+<span class="nc" id="L73">                User user = new User(</span>
+                        null,
+                        firstName,
+                        lastName,
+                        username,
+                        email,
+                        phoneNumber,
+                        Status.ACTIVE,
+                        role,
+<span class="nc" id="L82">                        true</span>
+                );
+<span class="nc" id="L84">                User saved = userRepository.save(user);</span>
+<span class="nc" id="L85">                log.info(&quot;Created default user: {}&quot;, saved);</span>
+<span class="nc" id="L86">            }</span>
+        );
+<span class="nc" id="L88">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
