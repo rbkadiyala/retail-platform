@@ -1,20 +1,27 @@
 package com.example.retailplatform.user.adapter.in.web;
 
 import com.example.retailplatform.user.adapter.in.web.dto.UserRequest;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.example.retailplatform.user.domain.port.in.UserUseCase;
 import com.example.retailplatform.user.adapter.in.web.dto.UserDtoMapper;
+import com.example.retailplatform.user.domain.port.in.UserUseCase;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Validation tests for {@link UserController}.
+ * Uses Spring Boot 3.4+ compatible mock configuration.
+ */
 @WebMvcTest(UserController.class)
+@Import(UserControllerValidationTest.MockBeans.class)
 public class UserControllerValidationTest {
 
     @Autowired
@@ -23,15 +30,36 @@ public class UserControllerValidationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // Mock dependencies of UserController
-    @MockBean
-    private UserUseCase userUseCase;
+    //@Autowired
+    //private UserUseCase userUseCase;
 
-    @MockBean
-    private UserDtoMapper userDtoMapper;
+    //@Autowired
+    //private UserDtoMapper userDtoMapper;
 
-    @MockBean
-    private UserModelAssembler assembler;
+    //@Autowired
+    //private UserModelAssembler assembler;
+
+    /**
+     * Provides mock beans instead of using deprecated @MockBean.
+     */
+    @org.springframework.boot.test.context.TestConfiguration
+    static class MockBeans {
+
+        @Bean
+        UserUseCase userUseCase() {
+            return Mockito.mock(UserUseCase.class);
+        }
+
+        @Bean
+        UserDtoMapper userDtoMapper() {
+            return Mockito.mock(UserDtoMapper.class);
+        }
+
+        @Bean
+        UserModelAssembler userModelAssembler() {
+            return Mockito.mock(UserModelAssembler.class);
+        }
+    }
 
     @Test
     void testCreateUser_InvalidEmail() throws Exception {

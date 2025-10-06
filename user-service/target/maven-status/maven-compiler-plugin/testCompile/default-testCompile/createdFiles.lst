@@ -1,12 +1,14 @@
 com\example\retailplatform\user\adapter\out\persistence\UserEntityMapperTest$FieldUpdateTestData.class
+com\example\retailplatform\user\common\GlobalExceptionHandlerTest.class
+com\example\retailplatform\user\application\service\UserServiceExceptionTest.class
+com\example\retailplatform\user\adapter\in\web\UserControllerValidationTest$MockBeans.class
+com\example\retailplatform\user\adapter\in\web\UserControllerIntegrationTest$MockBeans.class
 com\example\retailplatform\user\adapter\in\web\UserControllerIntegrationTest.class
 com\example\retailplatform\user\adapter\out\persistence\UserEntityMapperTest.class
 com\example\retailplatform\user\adapter\in\web\UserControllerTest.class
 com\example\retailplatform\user\adapter\in\web\UserControllerValidationTest.class
 com\example\retailplatform\user\adapter\in\web\UserModelAssemblerTest.class
-com\example\retailplatform\user\common\GlobalExceptionHandlerTest.class
 com\example\retailplatform\user\application\service\UserServiceUniquenessTest.class
-com\example\retailplatform\user\application\service\UserServiceExceptionTest.class
 com\example\retailplatform\user\adapter\in\web\UserModuleIntegrationTest.class
 com\example\retailplatform\user\adapter\in\web\dto\UserDtoMapperTest.class
 com\example\retailplatform\user\UserServiceApplicationTests.class

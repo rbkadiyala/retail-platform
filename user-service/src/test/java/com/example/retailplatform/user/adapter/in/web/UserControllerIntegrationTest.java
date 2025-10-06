@@ -11,9 +11,10 @@ import com.example.retailplatform.user.domain.port.in.UserUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
@@ -26,20 +27,24 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Integration test for {@link UserController} using Spring Boot 3.4+ style mock configuration.
+ * Replaces deprecated @MockBean with @TestConfiguration and Mockito beans.
+ */
 @WebMvcTest(UserController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, UserControllerIntegrationTest.MockBeans.class})
 class UserControllerIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Autowired
     private UserUseCase userUseCase;
 
-    @MockBean
+    @Autowired
     private UserDtoMapper userDtoMapper;
 
-    @MockBean
+    @Autowired
     private UserModelAssembler assembler;
 
     @Autowired
@@ -49,6 +54,29 @@ class UserControllerIntegrationTest {
     private UserRequest userRequest;
     private UserResponse userResponse;
     private EntityModel<UserResponse> entityModel;
+
+    /**
+     * Provides mock beans to the Spring test context.
+     * This is the new recommended approach instead of @MockBean.
+     */
+    @org.springframework.boot.test.context.TestConfiguration
+    static class MockBeans {
+
+        @Bean
+        UserUseCase userUseCase() {
+            return Mockito.mock(UserUseCase.class);
+        }
+
+        @Bean
+        UserDtoMapper userDtoMapper() {
+            return Mockito.mock(UserDtoMapper.class);
+        }
+
+        @Bean
+        UserModelAssembler userModelAssembler() {
+            return Mockito.mock(UserModelAssembler.class);
+        }
+    }
 
     @BeforeEach
     void setUp() {

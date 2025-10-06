@@ -4,10 +4,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class UserServiceApplicationTests {
+public class UserServiceApplicationTests {
 
 	@Test
-	void contextLoads() {
+	public void contextLoads() {
+		// This test method is intentionally left empty.
+    	// It verifies that the Spring ApplicationContext can start successfully
+    	// without throwing any exceptions during initialization.
 	}
 
 }
