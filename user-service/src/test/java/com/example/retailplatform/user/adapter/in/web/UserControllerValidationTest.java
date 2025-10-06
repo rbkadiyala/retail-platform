@@ -22,22 +22,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(UserController.class)
 @Import(UserControllerValidationTest.MockBeans.class)
-public class UserControllerValidationTest {
+class UserControllerValidationTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    //@Autowired
-    //private UserUseCase userUseCase;
-
-    //@Autowired
-    //private UserDtoMapper userDtoMapper;
-
-    //@Autowired
-    //private UserModelAssembler assembler;
 
     /**
      * Provides mock beans instead of using deprecated @MockBean.

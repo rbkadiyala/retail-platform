@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.hateoas.EntityModel;
 
 import static org.junit.jupiter.api.Assertions.*;
-//import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 class UserModelAssemblerTest {
 

@@ -73,6 +73,7 @@ class UserEntityMapperTest {
                 Boolean active = (Boolean) testData.value;
                 assertEquals(!active, entity.isDeleted(), "Active field should map to deleted correctly");
             }
+            default -> fail("Unexpected field name: " + testData.field);
         }
     }
 
