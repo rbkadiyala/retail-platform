@@ -71,7 +71,7 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
                 .collect(Collectors.toMap(p -> p, request::getParameter));
 
         byte[] content = request.getContentAsByteArray();
-        String body = (content != null && content.length > 0)
+        String body = content.length > 0
                 ? new String(content, StandardCharsets.UTF_8)
                 : "";
 
