@@ -70,9 +70,15 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
                 .stream()
                 .collect(Collectors.toMap(p -> p, request::getParameter));
 
-        String body = new String(request.getContentAsByteArray(), StandardCharsets.UTF_8);
-        body = maskSensitiveData(body);
-        body = prettyPrintJson(body);
+        byte[] content = request.getContentAsByteArray();
+        String body = (content != null && content.length > 0)
+                ? new String(content, StandardCharsets.UTF_8)
+                : "";
+
+        if (!body.isEmpty()) {
+            body = maskSensitiveData(body);
+            body = prettyPrintJson(body);
+        }
 
         httpLogger.info(
                 "{{\"correlationId\":\"{}\",\"method\":\"{}\",\"path\":\"{}\",\"params\":{},\"body\":{}}}",

@@ -2,5 +2,5 @@ projectKey=retail-platform
 serverUrl=http://localhost:9000
 serverVersion=25.10.0.114319
 dashboardUrl=http://localhost:9000/dashboard?id=retail-platform
-ceTaskId=26570250-2823-4951-8690-4f0cd13ddff6
-ceTaskUrl=http://localhost:9000/api/ce/task?id=26570250-2823-4951-8690-4f0cd13ddff6
+ceTaskId=ad81c363-d643-48b5-9325-d5d29e004a14
+ceTaskUrl=http://localhost:9000/api/ce/task?id=ad81c363-d643-48b5-9325-d5d29e004a14
