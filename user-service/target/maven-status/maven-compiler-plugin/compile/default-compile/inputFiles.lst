@@ -12,7 +12,6 @@ D:\User\devops\retail-platform\user-service\src\main\java\com\example\retailplat
 D:\User\devops\retail-platform\user-service\src\main\java\com\example\retailplatform\user\domain\exception\ResourceAlreadyExistsException.java
 D:\User\devops\retail-platform\user-service\src\main\java\com\example\retailplatform\user\util\MdcUtil.java
 D:\User\devops\retail-platform\user-service\src\main\java\com\example\retailplatform\user\domain\model\User.java
-D:\User\devops\retail-platform\user-service\src\main\java\com\example\retailplatform\user\config\AsyncConfig.java
 D:\User\devops\retail-platform\user-service\src\main\java\com\example\retailplatform\user\UserServiceApplication.java
 D:\User\devops\retail-platform\user-service\src\main\java\com\example\retailplatform\user\adapter\out\persistence\UserRepositoryAdapter.java
 D:\User\devops\retail-platform\user-service\src\main\java\com\example\retailplatform\user\adapter\out\persistence\UserEntityMapper.java

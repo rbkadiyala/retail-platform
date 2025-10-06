@@ -17,4 +17,7 @@ public class UserConstants {
     public static final String FIELD_USERNAME = "username";
     public static final String FIELD_EMAIL = "email";
     public static final String FIELD_PHONE = "phoneNumber";
+
+    public static final String REQUEST_URI = "/api/users";
+    public static final String MESSAGE_PLACEHOLDER = "mockMessage";
 }

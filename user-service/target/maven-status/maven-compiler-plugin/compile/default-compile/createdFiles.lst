@@ -5,8 +5,6 @@ com\example\retailplatform\user\adapter\in\web\LoadUserDatabase.class
 com\example\retailplatform\user\adapter\out\persistence\UserRepositoryAdapter.class
 com\example\retailplatform\user\domain\port\out\UserRepositoryPort.class
 com\example\retailplatform\user\domain\exception\ResourceAlreadyExistsException.class
-com\example\retailplatform\user\config\AsyncConfig.class
-com\example\retailplatform\user\config\AsyncConfig$1.class
 com\example\retailplatform\user\common\ErrorResponse$ErrorResponseBuilder.class
 com\example\retailplatform\user\common\GlobalExceptionHandler.class
 com\example\retailplatform\user\adapter\in\web\RequestResponseLoggingFilter.class

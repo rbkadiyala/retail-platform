@@ -55,16 +55,16 @@ import org.springframework.stereotype.Component;
      * Does NOT overwrite createdAt or createdBy.
      */
     public void updateEntityFromModel(User user, UserEntity entity) {
-<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        if (user.getFirstName() != null) entity.setFirstName(user.getFirstName());</span>
-<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (user.getLastName() != null) entity.setLastName(user.getLastName());</span>
-<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (user.getUsername() != null) entity.setUsername(user.getUsername());</span>
-<span class="pc bpc" id="L61" title="1 of 2 branches missed.">        if (user.getEmail() != null) entity.setEmail(user.getEmail());</span>
-<span class="pc bpc" id="L62" title="1 of 2 branches missed.">        if (user.getPhoneNumber() != null) entity.setPhoneNumber(user.getPhoneNumber());</span>
-<span class="pc bpc" id="L63" title="1 of 2 branches missed.">        if (user.getStatus() != null) entity.setStatus(user.getStatus());</span>
-<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        if (user.getRole() != null) entity.setRole(user.getRole());</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (user.getFirstName() != null) entity.setFirstName(user.getFirstName());</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (user.getLastName() != null) entity.setLastName(user.getLastName());</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (user.getUsername() != null) entity.setUsername(user.getUsername());</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (user.getEmail() != null) entity.setEmail(user.getEmail());</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (user.getPhoneNumber() != null) entity.setPhoneNumber(user.getPhoneNumber());</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (user.getStatus() != null) entity.setStatus(user.getStatus());</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (user.getRole() != null) entity.setRole(user.getRole());</span>
         // active is nullable: only update deleted flag if active != null
-<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        if (user.getActive() != null) {</span>
-<span class="pc bpc" id="L67" title="1 of 2 branches missed.">            entity.setDeleted(!user.getActive());</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (user.getActive() != null) {</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">            entity.setDeleted(!user.getActive());</span>
         }
 <span class="fc" id="L69">    }</span>
 }

@@ -36,99 +36,88 @@ public class GlobalExceptionHandler {
     public ResponseEntity&lt;ErrorResponse&gt; handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
 <span class="pc bpc" id="L37" title="1 of 2 branches missed.">        String key = ex.getKey() != null ? ex.getKey() : UserConstants.USER_NOT_FOUND_KEY;</span>
 <span class="fc" id="L38">        String message = getMessage(key);</span>
-<span class="fc" id="L39">        return buildErrorResponse(HttpStatus.NOT_FOUND, message, key, request.getRequestURI(), null, null, ex);</span>
+<span class="fc" id="L39">        return buildErrorResponse(HttpStatus.NOT_FOUND, message, key, getPath(request), null, null, ex);</span>
     }
 
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity&lt;ErrorResponse&gt; handleResourceAlreadyExists(ResourceAlreadyExistsException ex, HttpServletRequest request) {
-<span class="nc bnc" id="L44" title="All 2 branches missed.">        String key = ex.getKey() != null ? ex.getKey() : UserConstants.USER_ALREADY_EXISTS_KEY;</span>
-<span class="nc" id="L45">        String message = getMessage(key);</span>
-<span class="nc" id="L46">        return buildErrorResponse(HttpStatus.CONFLICT, message, key, request.getRequestURI(), ex.getField(), null, ex);</span>
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        String key = ex.getKey() != null ? ex.getKey() : UserConstants.USER_ALREADY_EXISTS_KEY;</span>
+<span class="fc" id="L45">        String message = getMessage(key);</span>
+<span class="fc" id="L46">        return buildErrorResponse(HttpStatus.CONFLICT, message, key, getPath(request), ex.getField(), null, ex);</span>
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity&lt;ErrorResponse&gt; handleValidationException(
-            MethodArgumentNotValidException ex,
-            HttpServletRequest request) {
+    public ResponseEntity&lt;ErrorResponse&gt; handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
+<span class="fc" id="L51">        List&lt;ValidationError&gt; validationErrors = ex.getBindingResult()</span>
+<span class="fc" id="L52">                .getFieldErrors()</span>
+<span class="fc" id="L53">                .stream()</span>
+<span class="fc" id="L54">                .map(this::mapFieldError)</span>
+<span class="fc" id="L55">                .collect(Collectors.toList());</span>
 
-<span class="fc" id="L54">        List&lt;ValidationError&gt; validationErrors = ex.getBindingResult()</span>
-<span class="fc" id="L55">                .getFieldErrors()</span>
-<span class="fc" id="L56">                .stream()</span>
-<span class="fc" id="L57">                .map(this::mapFieldError)</span>
-<span class="fc" id="L58">                .collect(Collectors.toList());</span>
+<span class="fc" id="L57">        String key = UserConstants.VALIDATION_FAILED_KEY;</span>
+<span class="fc" id="L58">        String message = getMessage(key, new Object[]{validationErrors.size()});</span>
 
-<span class="fc" id="L60">        String key = UserConstants.VALIDATION_FAILED_KEY;</span>
-<span class="fc" id="L61">        String message = getMessage(key, new Object[]{validationErrors.size()});</span>
-
-        // Return 400 instead of 422
-<span class="fc" id="L64">        return buildErrorResponse(</span>
-                HttpStatus.BAD_REQUEST,
-                message,
-                key,
-<span class="fc" id="L68">                request.getRequestURI(),</span>
-                null,
-                validationErrors,
-                ex
-        );
+<span class="fc" id="L60">        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, getPath(request), null, validationErrors, ex);</span>
     }
-    
+
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity&lt;ErrorResponse&gt; handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest request) {
-<span class="nc" id="L77">        String key = UserConstants.CONSTRAINT_VIOLATION_KEY;</span>
-<span class="nc" id="L78">        String message = getMessage(key);</span>
-<span class="nc" id="L79">        return buildErrorResponse(HttpStatus.CONFLICT, message, key, request.getRequestURI(), null, null, ex);</span>
+<span class="fc" id="L65">        String key = UserConstants.CONSTRAINT_VIOLATION_KEY;</span>
+<span class="fc" id="L66">        String message = getMessage(key);</span>
+<span class="fc" id="L67">        return buildErrorResponse(HttpStatus.CONFLICT, message, key, getPath(request), null, null, ex);</span>
     }
 
     @ExceptionHandler(PersistenceException.class)
     public ResponseEntity&lt;ErrorResponse&gt; handlePersistenceException(PersistenceException ex, HttpServletRequest request) {
-<span class="nc" id="L84">        String key = UserConstants.PERSISTENCE_EXCEPTION_KEY;</span>
-<span class="nc" id="L85">        String message = getMessage(key);</span>
-<span class="nc" id="L86">        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, request.getRequestURI(), null, null, ex);</span>
+<span class="fc" id="L72">        String key = UserConstants.PERSISTENCE_EXCEPTION_KEY;</span>
+<span class="fc" id="L73">        String message = getMessage(key);</span>
+<span class="fc" id="L74">        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, getPath(request), null, null, ex);</span>
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity&lt;ErrorResponse&gt; handleRuntimeException(RuntimeException ex, HttpServletRequest request) {
-<span class="nc" id="L91">        String key = UserConstants.RUNTIME_EXCEPTION_KEY;</span>
-<span class="nc" id="L92">        String message = getMessage(key);</span>
-<span class="nc" id="L93">        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, request.getRequestURI(), null, null, ex);</span>
-    }    
+<span class="fc" id="L79">        String key = UserConstants.RUNTIME_EXCEPTION_KEY;</span>
+<span class="fc" id="L80">        String message = getMessage(key);</span>
+<span class="fc" id="L81">        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, getPath(request), null, null, ex);</span>
+    }
 
     // ---------------- Generic error builder ----------------
     private ResponseEntity&lt;ErrorResponse&gt; buildErrorResponse(HttpStatus status, String message, String key, String path,
                                                              String field, List&lt;ValidationError&gt; validationErrors, Exception ex) {
-<span class="fc" id="L99">        ErrorResponse error = ErrorResponse.builder()</span>
-<span class="fc" id="L100">                .timestamp(Instant.now())</span>
-<span class="fc" id="L101">                .status(status.value())</span>
-<span class="fc" id="L102">                .error(status.getReasonPhrase())</span>
-<span class="fc" id="L103">                .message(message)</span>
-<span class="fc" id="L104">                .key(key)</span>
-<span class="fc" id="L105">                .field(field)</span>
-<span class="fc" id="L106">                .path(path)</span>
-<span class="fc" id="L107">                .validationErrors(validationErrors)</span>
-<span class="fc" id="L108">                .build();</span>
+<span class="fc" id="L87">        ErrorResponse error = ErrorResponse.builder()</span>
+<span class="fc" id="L88">                .timestamp(Instant.now())</span>
+<span class="fc" id="L89">                .status(status.value())</span>
+<span class="fc" id="L90">                .error(status.getReasonPhrase())</span>
+<span class="fc" id="L91">                .message(message)</span>
+<span class="fc" id="L92">                .key(key)</span>
+<span class="fc" id="L93">                .field(field)</span>
+<span class="fc" id="L94">                .path(path)</span>
+<span class="fc" id="L95">                .validationErrors(validationErrors)</span>
+<span class="fc" id="L96">                .build();</span>
 
-<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        if (status.is4xxClientError()) {</span>
-<span class="fc" id="L111">            appLogger.warn(&quot;{}&quot;, error, ex);</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        if (status.is4xxClientError()) {</span>
+<span class="fc" id="L99">            appLogger.warn(&quot;Client error: {}&quot;, error, ex);</span>
         } else {
-<span class="nc" id="L113">            appLogger.error(&quot;{}&quot;, error, ex);</span>
+<span class="nc" id="L101">            appLogger.error(&quot;Server error: {}&quot;, error, ex);</span>
         }
 
-<span class="fc" id="L116">        return ResponseEntity.status(status).body(error);</span>
+<span class="fc" id="L104">        return ResponseEntity.status(status).body(error);</span>
     }
 
     private ValidationError mapFieldError(FieldError fieldError) {
-<span class="fc" id="L120">        return ValidationError.builder()</span>
-<span class="fc" id="L121">                .field(fieldError.getField())</span>
-<span class="fc" id="L122">                .value(fieldError.getRejectedValue())</span>
-<span class="fc" id="L123">                .message(fieldError.getDefaultMessage())</span>
-<span class="fc" id="L124">                .build();</span>
+<span class="fc" id="L108">        return ValidationError.builder()</span>
+<span class="fc" id="L109">                .field(fieldError.getField())</span>
+<span class="fc" id="L110">                .value(fieldError.getRejectedValue())</span>
+<span class="fc" id="L111">                .message(fieldError.getDefaultMessage())</span>
+<span class="fc" id="L112">                .build();</span>
     }
 
-    // ---------------- i18n message helper ----------------
     private String getMessage(String key, Object... args) {
-<span class="fc" id="L129">        String msg = messageSource.getMessage(key, args, key, LocaleContextHolder.getLocale());</span>
-<span class="fc" id="L130">        System.out.println(&quot;Resolved message for key '&quot; + key + &quot;' with locale &quot; + LocaleContextHolder.getLocale() + &quot; : &quot; + msg);</span>
-<span class="fc" id="L131">        return msg;</span>
+<span class="fc" id="L116">        return messageSource.getMessage(key, args, key, LocaleContextHolder.getLocale());</span>
+    }
+
+    private String getPath(HttpServletRequest request) {
+<span class="pc bpc" id="L120" title="2 of 4 branches missed.">        return request != null &amp;&amp; request.getRequestURI() != null ? request.getRequestURI() : &quot;N/A&quot;;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

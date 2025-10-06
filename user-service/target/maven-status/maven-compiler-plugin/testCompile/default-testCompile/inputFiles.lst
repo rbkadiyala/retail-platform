@@ -1,5 +1,7 @@
 D:\User\devops\retail-platform\user-service\src\test\java\com\example\retailplatform\user\adapter\in\web\UserControllerValidationTest.java
+D:\User\devops\retail-platform\user-service\src\test\java\com\example\retailplatform\user\common\GlobalExceptionHandlerTest.java
 D:\User\devops\retail-platform\user-service\src\test\java\com\example\retailplatform\user\application\service\UserServiceExceptionTest.java
+D:\User\devops\retail-platform\user-service\src\test\java\com\example\retailplatform\user\adapter\out\persistence\UserEntityMapperTest.java
 D:\User\devops\retail-platform\user-service\src\test\java\com\example\retailplatform\user\application\service\UserServiceTest.java
 D:\User\devops\retail-platform\user-service\src\test\java\com\example\retailplatform\user\adapter\in\web\UserControllerIntegrationTest.java
 D:\User\devops\retail-platform\user-service\src\test\java\com\example\retailplatform\user\adapter\in\web\UserControllerTest.java

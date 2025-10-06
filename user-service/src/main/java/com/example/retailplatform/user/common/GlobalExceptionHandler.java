@@ -36,21 +36,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
         String key = ex.getKey() != null ? ex.getKey() : UserConstants.USER_NOT_FOUND_KEY;
         String message = getMessage(key);
-        return buildErrorResponse(HttpStatus.NOT_FOUND, message, key, request.getRequestURI(), null, null, ex);
+        return buildErrorResponse(HttpStatus.NOT_FOUND, message, key, getPath(request), null, null, ex);
     }
 
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleResourceAlreadyExists(ResourceAlreadyExistsException ex, HttpServletRequest request) {
         String key = ex.getKey() != null ? ex.getKey() : UserConstants.USER_ALREADY_EXISTS_KEY;
         String message = getMessage(key);
-        return buildErrorResponse(HttpStatus.CONFLICT, message, key, request.getRequestURI(), ex.getField(), null, ex);
+        return buildErrorResponse(HttpStatus.CONFLICT, message, key, getPath(request), ex.getField(), null, ex);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(
-            MethodArgumentNotValidException ex,
-            HttpServletRequest request) {
-
+    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
         List<ValidationError> validationErrors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -60,38 +57,29 @@ public class GlobalExceptionHandler {
         String key = UserConstants.VALIDATION_FAILED_KEY;
         String message = getMessage(key, new Object[]{validationErrors.size()});
 
-        // Return 400 instead of 422
-        return buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                message,
-                key,
-                request.getRequestURI(),
-                null,
-                validationErrors,
-                ex
-        );
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, getPath(request), null, validationErrors, ex);
     }
-    
+
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest request) {
         String key = UserConstants.CONSTRAINT_VIOLATION_KEY;
         String message = getMessage(key);
-        return buildErrorResponse(HttpStatus.CONFLICT, message, key, request.getRequestURI(), null, null, ex);
+        return buildErrorResponse(HttpStatus.CONFLICT, message, key, getPath(request), null, null, ex);
     }
 
     @ExceptionHandler(PersistenceException.class)
     public ResponseEntity<ErrorResponse> handlePersistenceException(PersistenceException ex, HttpServletRequest request) {
         String key = UserConstants.PERSISTENCE_EXCEPTION_KEY;
         String message = getMessage(key);
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, request.getRequestURI(), null, null, ex);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, getPath(request), null, null, ex);
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex, HttpServletRequest request) {
         String key = UserConstants.RUNTIME_EXCEPTION_KEY;
         String message = getMessage(key);
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, request.getRequestURI(), null, null, ex);
-    }    
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, getPath(request), null, null, ex);
+    }
 
     // ---------------- Generic error builder ----------------
     private ResponseEntity<ErrorResponse> buildErrorResponse(HttpStatus status, String message, String key, String path,
@@ -108,9 +96,9 @@ public class GlobalExceptionHandler {
                 .build();
 
         if (status.is4xxClientError()) {
-            appLogger.warn("{}", error, ex);
+            appLogger.warn("Client error: {}", error, ex);
         } else {
-            appLogger.error("{}", error, ex);
+            appLogger.error("Server error: {}", error, ex);
         }
 
         return ResponseEntity.status(status).body(error);
@@ -124,10 +112,11 @@ public class GlobalExceptionHandler {
                 .build();
     }
 
-    // ---------------- i18n message helper ----------------
     private String getMessage(String key, Object... args) {
-        String msg = messageSource.getMessage(key, args, key, LocaleContextHolder.getLocale());
-        System.out.println("Resolved message for key '" + key + "' with locale " + LocaleContextHolder.getLocale() + " : " + msg);
-        return msg;
+        return messageSource.getMessage(key, args, key, LocaleContextHolder.getLocale());
+    }
+
+    private String getPath(HttpServletRequest request) {
+        return request != null && request.getRequestURI() != null ? request.getRequestURI() : "N/A";
     }
 }

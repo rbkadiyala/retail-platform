@@ -14,33 +14,33 @@
         <module>auth-service</module>
     </modules>
 
+    <properties>
+        <java.version>17</java.version>
+        <spring.boot.version>3.5.6</spring.boot.version>
+
+        <!-- SonarQube -->
+        <sonar.projectKey>retail-platform</sonar.projectKey>
+        <sonar.host.url>${env.SONAR_HOST_URL}</sonar.host.url>
+        <sonar.login>${env.SONAR_TOKEN}</sonar.login>
+        <sonar.scm.provider>git</sonar.scm.provider>
+        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <sonar.sourceEncoding>UTF-8</sonar.sourceEncoding>
+
+        <!-- Coverage reports -->
+        <sonar.coverage.jacoco.xmlReportPaths>**/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>3.5.6</version>
+                <version>${spring.boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <properties>
-        <java.version>17</java.version>
-
-        <!-- SonarQube using Windows environment variables -->
-        <sonar.projectKey>retail-platform</sonar.projectKey>
-        <sonar.host.url>${env.SONAR_HOST_URL}</sonar.host.url>
-        <sonar.token>${env.SONAR_TOKEN}</sonar.token>
-        <sonar.scm.provider>git</sonar.scm.provider>
-
-        <!-- Sonar reports -->
-        <sonar.findbugs.reportPaths>**/target/spotbugsXml.xml</sonar.findbugs.reportPaths>
-        <sonar.dependencyCheck.reportPath>**/target/dependency-check-report.xml</sonar.dependencyCheck.reportPath>
-        <sonar.dependencyCheck.htmlReportPath>**/target/dependency-check-report.html</sonar.dependencyCheck.htmlReportPath>
-        <sonar.coverage.jacoco.xmlReportPaths>**/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-    </properties>
 
     <build>
         <pluginManagement>
@@ -50,10 +50,10 @@
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
-                    <version>3.5.6</version>
+                    <version>${spring.boot.version}</version>
                 </plugin>
 
-                <!-- Maven Compiler -->
+                <!-- Compiler -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
@@ -65,13 +65,6 @@
                     </configuration>
                 </plugin>
 
-                <!-- Sonar Maven Plugin -->
-                <plugin>
-                    <groupId>org.sonarsource.scanner.maven</groupId>
-                    <artifactId>sonar-maven-plugin</artifactId>
-                    <version>5.1.0.4751</version>
-                </plugin>
-
                 <!-- JaCoCo -->
                 <plugin>
                     <groupId>org.jacoco</groupId>
@@ -80,27 +73,28 @@
                     <executions>
                         <execution>
                             <id>prepare-agent</id>
-                            <goals>
-                                <goal>prepare-agent</goal>
-                            </goals>
+                            <goals><goal>prepare-agent</goal></goals>
                         </execution>
                         <execution>
                             <id>report</id>
                             <phase>verify</phase>
-                            <goals>
-                                <goal>report</goal>
-                            </goals>
+                            <goals><goal>report</goal></goals>
                             <configuration>
-                                <dataFile>${project.build.directory}/jacoco.exec</dataFile>
                                 <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
                                 <formats>
-                                    <format>HTML</format>
                                     <format>XML</format>
-                                    <format>CSV</format>
+                                    <format>HTML</format>
                                 </formats>
                             </configuration>
                         </execution>
                     </executions>
+                </plugin>
+
+                <!-- Sonar Maven Plugin -->
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>5.1.0.4751</version>
                 </plugin>
 
             </plugins>
@@ -112,7 +106,6 @@
             <id>security-scan</id>
             <build>
                 <plugins>
-
                     <!-- SpotBugs + FindSecBugs -->
                     <plugin>
                         <groupId>com.github.spotbugs</groupId>
@@ -135,9 +128,7 @@
                         <executions>
                             <execution>
                                 <phase>verify</phase>
-                                <goals>
-                                    <goal>check</goal>
-                                </goals>
+                                <goals><goal>check</goal></goals>
                             </execution>
                         </executions>
                     </plugin>
@@ -149,28 +140,19 @@
                         <version>12.1.0</version>
                         <inherited>false</inherited>
                         <configuration>
-                            <dataDirectory>C:\Users\krbab\.dependency-check</dataDirectory>
                             <scanOffline>true</scanOffline>
                             <failOnError>false</failOnError>
-
-                            <!-- Disable external analyzers (OSS Index, Nexus, Central) -->
                             <enableOssIndexAnalyzer>false</enableOssIndexAnalyzer>
                             <enableCentralAnalyzer>false</enableCentralAnalyzer>
                             <enableNexusIQAnalyzer>false</enableNexusIQAnalyzer>
-                            <enableExperimental>false</enableExperimental>
-
                             <format>ALL</format>
-                            <cveUrlModified>C:\Users\krbab\.dependency-check\nvd\nvdcve-2.0-modified.json.gz</cveUrlModified>
-                            <cveUrlBase>C:\Users\krbab\.dependency-check\nvd</cveUrlBase>
                             <outputDirectory>${project.build.directory}</outputDirectory>
                             <outputName>dependency-check-report</outputName>
                         </configuration>
                         <executions>
                             <execution>
                                 <phase>verify</phase>
-                                <goals>
-                                    <goal>check</goal>
-                                </goals>
+                                <goals><goal>check</goal></goals>
                             </execution>
                         </executions>
                     </plugin>
