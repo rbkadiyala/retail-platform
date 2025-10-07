@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -28,7 +27,7 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     public List<User> findAllActive() {
         return jpaRepository.findAllActive().stream()
                 .map(entityMapper::toModel)
-                .collect(Collectors.toList());
+                .toList(); 
     }
 
     @Override

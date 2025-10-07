@@ -55,9 +55,19 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.toList());
 
         String key = UserConstants.VALIDATION_FAILED_KEY;
-        String message = getMessage(key, new Object[]{validationErrors.size()});
 
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, getPath(request), null, validationErrors, ex);
+        // Disambiguate by casting the array to Object[]
+        String message = getMessage(key, (Object[]) new Object[]{validationErrors.size()});
+
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                message,
+                key,
+                getPath(request),
+                null,
+                validationErrors,
+                ex
+        );
     }
 
     @ExceptionHandler(ConstraintViolationException.class)

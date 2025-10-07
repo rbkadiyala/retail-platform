@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -106,21 +107,19 @@ public class UserService implements UserUseCase {
         }
     }
 
-    private void ensureUniqueActive(String value, String fieldName, Function<String, Boolean> existsChecker, String key) {
-        if (value != null && existsChecker.apply(value)) {
+    private void ensureUniqueActive(String value, String fieldName, Predicate<String> existsChecker, String key) {
+        if (value != null && existsChecker.test(value)) {
             throw new ResourceAlreadyExistsException(fieldName, key);
         }
     }
 
     private void ensureUniqueGlobalForUpdate(String value, String currentUserId, String fieldName, String key) {
-        if (value != null) {
-            if (repositoryPort.existsByUsername(value)) {
-                repositoryPort.findActiveByUsername(value)
-                        .filter(u -> !u.getId().equals(currentUserId))
-                        .ifPresent(u -> {
-                            throw new ResourceAlreadyExistsException(fieldName, key);
-                        });
-            }
+        if (value != null && repositoryPort.existsByUsername(value)) {
+            repositoryPort.findActiveByUsername(value)
+                    .filter(u -> !u.getId().equals(currentUserId))
+                    .ifPresent(u -> {
+                        throw new ResourceAlreadyExistsException(fieldName, key);
+                    });
         }
     }
 

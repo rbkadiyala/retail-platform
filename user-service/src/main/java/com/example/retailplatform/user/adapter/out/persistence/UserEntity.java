@@ -1,5 +1,6 @@
 package com.example.retailplatform.user.adapter.out.persistence;
 
+import com.example.retailplatform.user.domain.UserConstants;
 import com.example.retailplatform.user.domain.model.Role;
 import com.example.retailplatform.user.domain.model.Status;
 import jakarta.persistence.*;
@@ -59,20 +60,20 @@ public class UserEntity {
         LocalDateTime now = LocalDateTime.now();
         createdAt = now;
         updatedAt = now;
-        if (createdBy == null) createdBy = "System";
-        if (updatedBy == null) updatedBy = "System";
+        if (createdBy == null) createdBy = UserConstants.SYSTEM;
+        if (updatedBy == null) updatedBy = UserConstants.SYSTEM;
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-        if (updatedBy == null) updatedBy = "System";
+        if (updatedBy == null) updatedBy = UserConstants.SYSTEM;
     }
 
     public void softDelete() {
         this.deleted = true;
         this.status = Status.DELETED;
         this.updatedAt = LocalDateTime.now();
-        this.updatedBy = "System";
+        this.updatedBy = UserConstants.SYSTEM;
     }
 }

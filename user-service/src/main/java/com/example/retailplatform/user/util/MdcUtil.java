@@ -10,6 +10,11 @@ import java.util.concurrent.Callable;
  */
 public class MdcUtil {
 
+    // Private constructor to prevent instantiation
+    private MdcUtil() {
+        throw new UnsupportedOperationException("Utility class should not be instantiated");
+    }
+
     /**
      * Wrap a Runnable so that it preserves the MDC context.
      */

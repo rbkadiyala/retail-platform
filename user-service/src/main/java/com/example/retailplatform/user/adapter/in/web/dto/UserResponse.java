@@ -2,7 +2,9 @@ package com.example.retailplatform.user.adapter.in.web.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.server.core.Relation;
@@ -10,7 +12,10 @@ import org.springframework.hateoas.server.core.Relation;
 
 @Builder
 @Getter
+@EqualsAndHashCode(callSuper = false)
+@ToString(callSuper = true)
 @Relation(collectionRelation = "userList", itemRelation = "user")
+
 public class UserResponse extends RepresentationModel<UserResponse> {
 
     @Schema(description = "Unique identifier of the user", example = "123e4567-e89b-12d3-a456-426614174000")

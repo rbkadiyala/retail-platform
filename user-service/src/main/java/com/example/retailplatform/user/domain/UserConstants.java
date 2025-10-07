@@ -20,4 +20,11 @@ public class UserConstants {
 
     public static final String REQUEST_URI = "/api/users";
     public static final String MESSAGE_PLACEHOLDER = "mockMessage";
+
+    public static final String SYSTEM = "System";
+
+    // Private constructor to prevent instantiation
+    private UserConstants() {
+        throw new UnsupportedOperationException("UserConstants is a utility class and should not be instantiated");
+    }
 }
