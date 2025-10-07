@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -49,10 +48,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
         List<ValidationError> validationErrors = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(this::mapFieldError)
-                .collect(Collectors.toList());
+            .getFieldErrors()
+            .stream()
+            .map(this::mapFieldError)
+            .toList(); 
 
         String key = UserConstants.VALIDATION_FAILED_KEY;
 
