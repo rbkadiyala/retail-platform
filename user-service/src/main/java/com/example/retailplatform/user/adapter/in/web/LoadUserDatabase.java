@@ -24,26 +24,24 @@
          */
         @Bean
         CommandLineRunner initAdminUser() {
-            return args -> {
-                userRepository.findActiveByUsername("admin").ifPresentOrElse(
-                    existing -> log.info("Admin already exists: {}", existing),
-                    () -> {
-                        User admin = new User(
-                                null,
-                                "System",
-                                "Admin",
-                                "admin",
-                                "admin@example.com",
-                                "0000000000",
-                                Status.ACTIVE,
-                                Role.ADMIN,
-                                true
-                        );
-                        User savedAdmin = userRepository.save(admin);
-                        log.info("Created fallback admin user: {}", savedAdmin);
-                    }
-                );
-            };
+            return args -> userRepository.findActiveByUsername("admin").ifPresentOrElse(
+                existing -> log.info("Admin already exists: {}", existing),
+                () -> {
+                    User admin = new User(
+                            null,
+                            "System",
+                            "Admin",
+                            "admin",
+                            "admin@example.com",
+                            "0000000000",
+                            Status.ACTIVE,
+                            Role.ADMIN,
+                            true
+                    );
+                    User savedAdmin = userRepository.save(admin);
+                    log.info("Created fallback admin user: {}", savedAdmin);
+                }
+            );
         }
 
         /**
