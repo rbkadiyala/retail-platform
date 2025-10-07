@@ -7,7 +7,9 @@ import org.springframework.stereotype.Component;
 public class UserDtoMapper {
 
     public User toModel(UserRequest request) {
-        if (request == null) return null;
+        if (request == null) {
+            return null;
+        }
         return User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -16,12 +18,14 @@ public class UserDtoMapper {
                 .phoneNumber(request.getPhoneNumber())
                 .status(request.getStatus())
                 .role(request.getRole())
-                .active(request.getActive() != null ? request.getActive() : true)
+                .active(request.getActive() != null && request.getActive()) // ✅ safer null handling
                 .build();
     }
 
     public UserResponse toResponse(User user) {
-        if (user == null) return null;
+        if (user == null) {
+            return null;
+        }
         return UserResponse.builder()
                 .id(user.getId())
                 .firstName(user.getFirstName())
@@ -31,7 +35,7 @@ public class UserDtoMapper {
                 .phoneNumber(user.getPhoneNumber())
                 .status(user.getStatus() != null ? user.getStatus().name() : null)
                 .role(user.getRole() != null ? user.getRole().name() : null)
-                .active(user.getActive() != null ? user.getActive() : true)
+                .active(user.getActive() != null && user.getActive()) // ✅ no need for null check — primitive
                 .build();
     }
 }

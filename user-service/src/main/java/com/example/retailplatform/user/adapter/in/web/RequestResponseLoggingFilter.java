@@ -81,12 +81,12 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
         }
 
         httpLogger.info(
-                "{{\"correlationId\":\"{}\",\"method\":\"{}\",\"path\":\"{}\",\"params\":{},\"body\":{}}}",
-                correlationId,
-                request.getMethod(),
-                request.getRequestURI(),
-                params.isEmpty() ? "{}" : params,
-                body.isEmpty() ? "{}" : body
+            "{{\"correlationId\":\"{}\",\"method\":\"{}\",\"path\":\"{}\",\"params\":{},\"body\":{}}}",
+            correlationId,
+            request.getMethod(),
+            request.getRequestURI(),
+            params == null || params.isEmpty() ? "{}" : params,
+            body == null || body.isEmpty() ? "{}" : body
         );
     }
 
@@ -102,13 +102,13 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
         body = prettyPrintJson(body);
 
         httpLogger.info(
-                "{{\"correlationId\":\"{}\",\"method\":\"{}\",\"path\":\"{}\",\"status\":{},\"durationMs\":{},\"body\":{}}}",
-                correlationId,
-                request.getMethod(),
-                request.getRequestURI(),
-                status,
-                duration,
-                body.isEmpty() ? "{}" : body
+            "{{\"correlationId\":\"{}\",\"method\":\"{}\",\"path\":\"{}\",\"status\":{},\"durationMs\":{},\"body\":{}}}",
+            correlationId,
+            request.getMethod(),
+            request.getRequestURI(),
+            status,
+            duration,
+            (body == null || body.isEmpty()) ? "{}" : body
         );
     }
 

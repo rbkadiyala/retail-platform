@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
@@ -33,7 +32,7 @@ public class UserController {
         List<EntityModel<UserResponse>> users = userUseCase.getAllUsers().stream()
                 .map(userDtoMapper::toResponse)
                 .map(assembler::toModel)
-                .collect(Collectors.toList());
+                .toList(); // ✅ Cleaner and unmodifiable list
 
         return CollectionModel.of(users,
                 linkTo(methodOn(UserController.class).all()).withSelfRel());

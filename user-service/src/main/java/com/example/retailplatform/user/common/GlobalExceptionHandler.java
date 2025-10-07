@@ -57,7 +57,7 @@ public class GlobalExceptionHandler {
         String key = UserConstants.VALIDATION_FAILED_KEY;
 
         // Disambiguate by casting the array to Object[]
-        String message = getMessage(key, (Object[]) new Object[]{validationErrors.size()});
+        String message = getMessage(key, new Object[]{validationErrors.size()});
 
         return buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
