@@ -2,16 +2,10 @@
 <Configuration status="WARN">
 
     <Appenders>
-        <!-- Console Appender for application errors only -->
+        <!-- Console Appender for all logs -->
         <Console name="Console" target="SYSTEM_OUT">
-            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
-
-        <!-- Async Console -->
-        <Async name="ConsoleAsync">
-            <AppenderRef ref="Console"/>
-        </Async>
 
         <!-- Rolling File Appender for application logs (JSON) -->
         <RollingFile name="AppFile" fileName="logs/app.log"
@@ -24,9 +18,6 @@
                 <SizeBasedTriggeringPolicy size="10 MB"/>
             </Policies>
         </RollingFile>
-        <Async name="AppFileAsync">
-            <AppenderRef ref="AppFile"/>
-        </Async>
 
         <!-- Rolling File Appender for HTTP logs (JSON) -->
         <RollingFile name="HttpFile" fileName="logs/http.log"
@@ -39,27 +30,24 @@
                 <SizeBasedTriggeringPolicy size="10 MB"/>
             </Policies>
         </RollingFile>
-        <Async name="HttpFileAsync">
-            <AppenderRef ref="HttpFile"/>
-        </Async>
     </Appenders>
 
     <Loggers>
         <!-- Application logs -->
         <Logger name="com.example.retailplatform" level="DEBUG" additivity="false">
-            <AppenderRef ref="AppFileAsync"/>
-            <AppenderRef ref="ConsoleAsync"/>
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="AppFile"/>
         </Logger>
 
         <!-- HTTP logs -->
         <Logger name="HTTP_LOG" level="INFO" additivity="false">
-            <AppenderRef ref="HttpFileAsync"/>
+            <AppenderRef ref="HttpFile"/>
         </Logger>
 
         <!-- Root logger -->
         <Root level="INFO">
-            <AppenderRef ref="AppFileAsync"/>
-            <AppenderRef ref="ConsoleAsync"/>
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="AppFile"/>
         </Root>
     </Loggers>
 </Configuration>
