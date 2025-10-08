@@ -1,50 +1,70 @@
+# docker-compose.yml
 services:
-  # ------------------------
+  # ----------------------
   # Keycloak
-  # ------------------------
+  # ----------------------
   keycloak:
     image: quay.io/keycloak/keycloak:21.1.1
-    container_name: keycloak
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-    command: start-dev --import-realm
+      KC_HEALTH_ENABLED: "true"
+    command: start-dev
     ports:
       - "8080:8080"
-    volumes:
-      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    restart: unless-stopped
     networks:
       - retail-platform
 
-  # ------------------------
+  # ----------------------
   # Auth Service
-  # ------------------------
+  # ----------------------
   auth-service:
     build:
-      context: ./auth-service
-    container_name: auth-service
+      context: .
+      dockerfile: auth-service/Dockerfile
     ports:
       - "9082:9082"
     depends_on:
       - keycloak
+    environment:
+      KEYCLOAK_URL: http://keycloak:8080
+    restart: on-failure
+    volumes:
+      - maven-repo:/root/.m2
     networks:
       - retail-platform
 
-  # ------------------------
+  # ----------------------
   # User Service
-  # ------------------------
+  # ----------------------
   user-service:
     build:
-      context: ./user-service
-    container_name: user-service
+      context: .
+      dockerfile: user-service/Dockerfile
     ports:
       - "9083:9083"
     depends_on:
-      - auth-service
       - keycloak
+      - auth-service
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:9082
+      KEYCLOAK_URL: http://keycloak:8080
+    restart: on-failure
+    volumes:
+      - maven-repo:/root/.m2
     networks:
       - retail-platform
 
+# ----------------------
+# Volumes
+# ----------------------
+volumes:
+  maven-repo:
+
+# ----------------------
+# Networks
+# ----------------------
 networks:
   retail-platform:
     driver: bridge
