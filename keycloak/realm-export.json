@@ -1,0 +1,36 @@
+{
+  "realm": "my-app-realm",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "auth-service",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "auth-service-secret",
+      "redirectUris": ["*"]
+    },
+    {
+      "clientId": "user-service",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "user-service-secret",
+      "redirectUris": ["*"]
+    }
+  ],
+  "users": [
+    {
+      "username": "testuser",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}
