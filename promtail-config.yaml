@@ -1,0 +1,63 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: info
+
+positions:
+  filename: /promtail/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # ----------------------
+  # Auth Service logs
+  # ----------------------
+  - job_name: auth-service
+    static_configs:
+      - targets: ['localhost']
+        labels:
+          job: auth-service
+          service: auth-service
+          __path__: /app/auth/logs/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            timestamp: timestamp
+            level: level
+            logger: logger
+            correlationId: correlationId
+            msg: message
+      - labels:
+          level
+          logger
+          correlationId
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+
+  # ----------------------
+  # User Service logs
+  # ----------------------
+  - job_name: user-service
+    static_configs:
+      - targets: ['localhost']
+        labels:
+          job: user-service
+          service: user-service
+          __path__: /app/user/logs/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            timestamp: timestamp
+            level: level
+            logger: logger
+            correlationId: correlationId
+            msg: message
+      - labels:
+          level
+          logger
+          correlationId
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano

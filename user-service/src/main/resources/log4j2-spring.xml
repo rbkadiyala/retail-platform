@@ -1,53 +1,77 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN">
+<Configuration status="WARN" monitorInterval="30" packages="org.apache.logging.log4j.core">
+    
+    <Properties>
+        <Property name="LOG_DIR">${sys:LOG_PATH:-/app/logs}</Property>
+        <Property name="SERVICE_NAME">user-service</Property>
+    </Properties>
 
     <Appenders>
-        <!-- Console Appender for all logs -->
-        <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        <!-- Async Console (for Docker stdout) -->
+        <Console name="ConsoleAppender" target="SYSTEM_OUT">
+            <JSONLayout compact="true" eventEol="true" header="false">
+                <KeyValuePair key="service" value="${SERVICE_NAME}" />
+                <KeyValuePair key="timestamp" value="%d{ISO8601}" />
+                <KeyValuePair key="thread" value="%t" />
+                <KeyValuePair key="level" value="%level" />
+                <KeyValuePair key="logger" value="%logger" />
+                <KeyValuePair key="correlationId" value="%X{correlationId}" />
+                <KeyValuePair key="message" value="%msg" />
+            </JSONLayout>
         </Console>
 
-        <!-- Rolling File Appender for application logs (JSON) -->
-        <RollingFile name="AppFile" fileName="logs/app.log"
-                     filePattern="logs/app-%d{yyyy-MM-dd}.log.gz">
-            <JsonLayout compact="true" eventEol="true"
-                        includeStacktrace="true"
-                        includeTimeMillis="true"/>
+        <!-- Async Rolling File for general logs -->
+        <RollingFile name="FileAppender"
+                     fileName="${LOG_DIR}/${SERVICE_NAME}.log"
+                     filePattern="${LOG_DIR}/${SERVICE_NAME}-%d{yyyy-MM-dd}-%i.log.gz">
+            <JsonLayout compact="true" eventEol="true" />
             <Policies>
-                <TimeBasedTriggeringPolicy/>
-                <SizeBasedTriggeringPolicy size="10 MB"/>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="50 MB"/>
             </Policies>
+            <DefaultRolloverStrategy max="30"/>
         </RollingFile>
 
-        <!-- Rolling File Appender for HTTP logs (JSON) -->
-        <RollingFile name="HttpFile" fileName="logs/http.log"
-                     filePattern="logs/http-%d{yyyy-MM-dd}.log.gz">
-            <JsonLayout compact="true" eventEol="true"
-                        includeStacktrace="true"
-                        includeTimeMillis="true"/>
+        <!-- Async Rolling File for errors -->
+        <RollingFile name="ErrorFileAppender"
+                     fileName="${LOG_DIR}/${SERVICE_NAME}-error.log"
+                     filePattern="${LOG_DIR}/${SERVICE_NAME}-error-%d{yyyy-MM-dd}-%i.log.gz">
+            <JsonLayout compact="true" eventEol="true" />
             <Policies>
-                <TimeBasedTriggeringPolicy/>
-                <SizeBasedTriggeringPolicy size="10 MB"/>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="50 MB"/>
             </Policies>
+            <DefaultRolloverStrategy max="30"/>
+            <Filters>
+                <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
         </RollingFile>
+
+        <!-- Wrap all appenders in AsyncAppender for non-blocking logging -->
+        <Async name="AsyncFile">
+            <AppenderRef ref="FileAppender"/>
+        </Async>
+
+        <Async name="AsyncErrorFile">
+            <AppenderRef ref="ErrorFileAppender"/>
+        </Async>
+
+        <Async name="AsyncConsole">
+            <AppenderRef ref="ConsoleAppender"/>
+        </Async>
     </Appenders>
 
     <Loggers>
-        <!-- Application logs -->
-        <Logger name="com.example.retailplatform" level="DEBUG" additivity="false">
-            <AppenderRef ref="Console"/>
-            <AppenderRef ref="AppFile"/>
+        <Logger name="com.example.retailplatform" level="info" additivity="false">
+            <AppenderRef ref="AsyncFile"/>
+            <AppenderRef ref="AsyncErrorFile"/>
+            <AppenderRef ref="AsyncConsole"/>
         </Logger>
 
-        <!-- HTTP logs -->
-        <Logger name="HTTP_LOG" level="INFO" additivity="false">
-            <AppenderRef ref="HttpFile"/>
-        </Logger>
-
-        <!-- Root logger -->
-        <Root level="INFO">
-            <AppenderRef ref="Console"/>
-            <AppenderRef ref="AppFile"/>
+        <Root level="warn">
+            <AppenderRef ref="AsyncFile"/>
+            <AppenderRef ref="AsyncErrorFile"/>
+            <AppenderRef ref="AsyncConsole"/>
         </Root>
     </Loggers>
 </Configuration>

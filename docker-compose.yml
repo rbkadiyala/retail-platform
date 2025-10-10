@@ -1,7 +1,8 @@
-# docker-compose.yml
+version: '3.9'
+
 services:
   # ----------------------
-  # Keycloak
+  # Keycloak (Identity Provider)
   # ----------------------
   keycloak:
     image: quay.io/keycloak/keycloak:21.1.1
@@ -29,9 +30,11 @@ services:
       - keycloak
     environment:
       KEYCLOAK_URL: http://keycloak:8080
+      LOG_PATH: /app/logs
     restart: on-failure
     volumes:
       - maven-repo:/root/.m2
+      - D:/User/devops/retail-platform/auth-logs:/app/logs
     networks:
       - retail-platform
 
@@ -50,17 +53,71 @@ services:
     environment:
       AUTH_SERVICE_URL: http://auth-service:9082
       KEYCLOAK_URL: http://keycloak:8080
+      LOG_PATH: /app/logs
     restart: on-failure
     volumes:
       - maven-repo:/root/.m2
+      - D:/User/devops/retail-platform/user-logs:/app/logs
     networks:
       - retail-platform
+
+  # ----------------------
+  # Loki (Log Aggregator)
+  # ----------------------
+  loki:
+    image: grafana/loki:2.9.3
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    networks:
+      - retail-platform
+
+  # ----------------------
+  # Promtail (Log Collector)
+  # ----------------------
+  promtail:
+    image: grafana/promtail:2.9.3
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yaml
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - D:/User/devops/retail-platform/auth-logs:/app/auth/logs
+      - D:/User/devops/retail-platform/user-logs:/app/user/logs
+      - promtail-positions:/promtail
+    command: -config.file=/etc/promtail/config.yaml
+    networks:
+      - retail-platform
+    depends_on:
+      - loki
+
+  # ----------------------
+  # Grafana (Dashboard)
+  # ----------------------
+  grafana:
+    image: grafana/grafana:10.4.1
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - retail-platform
+    depends_on:
+      - loki
 
 # ----------------------
 # Volumes
 # ----------------------
 volumes:
   maven-repo:
+  grafana-storage:
+  loki-data:
+  promtail-positions:
 
 # ----------------------
 # Networks

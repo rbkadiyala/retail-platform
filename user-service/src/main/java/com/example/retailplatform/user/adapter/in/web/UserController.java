@@ -16,12 +16,17 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
+
+    private static final Logger log = LogManager.getLogger(UserController.class);
 
     private final UserUseCase userUseCase;
     private final UserDtoMapper userDtoMapper;
@@ -78,5 +83,17 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         userUseCase.softDeleteUser(id);
         return ResponseEntity.noContent().build(); // 204
+    }
+
+    @GetMapping("/hello")
+    public String hello() {
+        log.info("Received request for /api/users/hello");
+        log.debug("Debug details: processing hello endpoint");
+
+        try { Thread.sleep(100); } 
+        catch (InterruptedException e) { log.error("Interrupted!", e); Thread.currentThread().interrupt(); }
+
+        log.info("Returning response from /api/users/hello");
+        return "Hello from User Service!";
     }
 }

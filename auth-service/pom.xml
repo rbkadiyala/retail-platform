@@ -67,6 +67,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Log4j2: replace default logging -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+
         <!-- Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
