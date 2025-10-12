@@ -1,77 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN" monitorInterval="30" packages="org.apache.logging.log4j.core">
-    
+<Configuration status="WARN" monitorInterval="30">
     <Properties>
         <Property name="LOG_DIR">${sys:LOG_PATH:-/app/logs}</Property>
         <Property name="SERVICE_NAME">user-service</Property>
     </Properties>
 
     <Appenders>
-        <!-- Async Console (for Docker stdout) -->
-        <Console name="ConsoleAppender" target="SYSTEM_OUT">
-            <JSONLayout compact="true" eventEol="true" header="false">
-                <KeyValuePair key="service" value="${SERVICE_NAME}" />
-                <KeyValuePair key="timestamp" value="%d{ISO8601}" />
-                <KeyValuePair key="thread" value="%t" />
-                <KeyValuePair key="level" value="%level" />
-                <KeyValuePair key="logger" value="%logger" />
-                <KeyValuePair key="correlationId" value="%X{correlationId}" />
-                <KeyValuePair key="message" value="%msg" />
-            </JSONLayout>
-        </Console>
-
-        <!-- Async Rolling File for general logs -->
-        <RollingFile name="FileAppender"
-                     fileName="${LOG_DIR}/${SERVICE_NAME}.log"
-                     filePattern="${LOG_DIR}/${SERVICE_NAME}-%d{yyyy-MM-dd}-%i.log.gz">
-            <JsonLayout compact="true" eventEol="true" />
+        <!-- One log file for everything -->
+        <RollingFile name="UnifiedFileAppender"
+                     fileName="${LOG_DIR}/${SERVICE_NAME}-combined.log"
+                     filePattern="${LOG_DIR}/${SERVICE_NAME}-combined-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="%m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
                 <SizeBasedTriggeringPolicy size="50 MB"/>
             </Policies>
-            <DefaultRolloverStrategy max="30"/>
         </RollingFile>
 
-        <!-- Async Rolling File for errors -->
-        <RollingFile name="ErrorFileAppender"
-                     fileName="${LOG_DIR}/${SERVICE_NAME}-error.log"
-                     filePattern="${LOG_DIR}/${SERVICE_NAME}-error-%d{yyyy-MM-dd}-%i.log.gz">
-            <JsonLayout compact="true" eventEol="true" />
+        <!-- JSON layout for your application logs -->
+        <RollingFile name="JsonFileAppender"
+                     fileName="${LOG_DIR}/${SERVICE_NAME}-combined.log"
+                     filePattern="${LOG_DIR}/${SERVICE_NAME}-combined-%d{yyyy-MM-dd}-%i.log.gz"
+                     append="true">
+            <JsonTemplateLayout eventTemplateText='{
+                "timestamp": "${json:timestamp}",
+                "level": "${json:level}",
+                "service": "${SERVICE_NAME}",
+                "logger": "${json:loggerName}",
+                "thread": "${json:threadName}",
+                "correlationId": "${json:mdc:correlationId}",
+                "traceId": "${json:mdc:traceId}",
+                "spanId": "${json:mdc:spanId}",
+                "message": "${json:message}",
+                "exception": "${json:exception}"
+            }'/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
                 <SizeBasedTriggeringPolicy size="50 MB"/>
             </Policies>
-            <DefaultRolloverStrategy max="30"/>
-            <Filters>
-                <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
-            </Filters>
         </RollingFile>
-
-        <!-- Wrap all appenders in AsyncAppender for non-blocking logging -->
-        <Async name="AsyncFile">
-            <AppenderRef ref="FileAppender"/>
-        </Async>
-
-        <Async name="AsyncErrorFile">
-            <AppenderRef ref="ErrorFileAppender"/>
-        </Async>
-
-        <Async name="AsyncConsole">
-            <AppenderRef ref="ConsoleAppender"/>
-        </Async>
     </Appenders>
 
     <Loggers>
+        <!-- JSON logs for your application code -->
         <Logger name="com.example.retailplatform" level="info" additivity="false">
-            <AppenderRef ref="AsyncFile"/>
-            <AppenderRef ref="AsyncErrorFile"/>
-            <AppenderRef ref="AsyncConsole"/>
+            <AppenderRef ref="JsonFileAppender"/>
         </Logger>
 
-        <Root level="warn">
-            <AppenderRef ref="AsyncFile"/>
-            <AppenderRef ref="AsyncErrorFile"/>
-            <AppenderRef ref="AsyncConsole"/>
+        <!-- Plain text logs for everything else -->
+        <Root level="info">
+            <AppenderRef ref="UnifiedFileAppender"/>
         </Root>
     </Loggers>
 </Configuration>

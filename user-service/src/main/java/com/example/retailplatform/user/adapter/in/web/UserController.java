@@ -85,15 +85,4 @@ public class UserController {
         return ResponseEntity.noContent().build(); // 204
     }
 
-    @GetMapping("/hello")
-    public String hello() {
-        log.info("Received request for /api/users/hello");
-        log.debug("Debug details: processing hello endpoint");
-
-        try { Thread.sleep(100); } 
-        catch (InterruptedException e) { log.error("Interrupted!", e); Thread.currentThread().interrupt(); }
-
-        log.info("Returning response from /api/users/hello");
-        return "Hello from User Service!";
-    }
 }

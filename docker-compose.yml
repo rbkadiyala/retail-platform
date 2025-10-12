@@ -33,7 +33,7 @@ services:
       LOG_PATH: /app/logs
     restart: on-failure
     volumes:
-      - maven-repo:/root/.m2
+      - maven-repo:/root/.m2          # Maven cache for faster builds
       - D:/User/devops/retail-platform/auth-logs:/app/logs
     networks:
       - retail-platform
@@ -56,7 +56,7 @@ services:
       LOG_PATH: /app/logs
     restart: on-failure
     volumes:
-      - maven-repo:/root/.m2
+      - maven-repo:/root/.m2          # Maven cache shared with auth-service
       - D:/User/devops/retail-platform/user-logs:/app/logs
     networks:
       - retail-platform

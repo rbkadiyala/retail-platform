@@ -14,10 +14,5 @@ public class UserServiceApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(UserServiceApplication.class, args);
-
-        // Test log
-        log.info("Logging is working! This should appear in /app/logs/user-service.log");
-    }
-
-    
+    }    
 }

@@ -1,7 +1,7 @@
 server:
   http_listen_port: 9080
   grpc_listen_port: 0
-  log_level: info
+  log_level: debug
 
 positions:
   filename: /promtail/positions.yaml
@@ -21,23 +21,39 @@ scrape_configs:
           service: auth-service
           __path__: /app/auth/logs/*.log
     pipeline_stages:
+      - drop:
+          expression: '^[^\{].*'
       - json:
           expressions:
             timestamp: timestamp
-            level: level
-            logger: logger
+            service: service
             correlationId: correlationId
-            msg: message
+            traceId: traceId
+            spanId: spanId
+            direction: direction
+            method: method
+            uri: uri
+            status: status
+            durationMs: durationMs
+            body: body
+          optional: true
       - labels:
-          level
-          logger
-          correlationId
+          service: service
+          correlationId: correlationId
+          traceId: traceId
+          spanId: spanId
+          direction: direction
+          status: status       # new label
+          method: method       # new label
+          uri: uri             # new label
+          durationMs: durationMs # new label
       - timestamp:
           source: timestamp
           format: RFC3339Nano
+          optional: true
 
   # ----------------------
-  # User Service logs
+  # User Service logs (combined)
   # ----------------------
   - job_name: user-service
     static_configs:
@@ -45,19 +61,35 @@ scrape_configs:
         labels:
           job: user-service
           service: user-service
-          __path__: /app/user/logs/*.log
+          __path__: /app/user/logs/user-service-combined.log
     pipeline_stages:
+      - drop:
+          expression: '^[^\{].*'
       - json:
           expressions:
             timestamp: timestamp
-            level: level
-            logger: logger
+            service: service
             correlationId: correlationId
-            msg: message
+            traceId: traceId
+            spanId: spanId
+            direction: direction
+            method: method
+            uri: uri
+            status: status
+            durationMs: durationMs
+            body: body
+          optional: true
       - labels:
-          level
-          logger
-          correlationId
+          service: service
+          correlationId: correlationId
+          traceId: traceId
+          spanId: spanId
+          direction: direction
+          status: status
+          method: method
+          uri: uri
+          durationMs: durationMs
       - timestamp:
           source: timestamp
           format: RFC3339Nano
+          optional: true
