@@ -1,13 +1,13 @@
 package com.example.retailplatform.user.common;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -15,30 +15,46 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
-    private Instant timestamp;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime timestamp;
+
     private int status;
     private String error;
-    private String message; 
-    private String key;     
-    private String field;
+    private String messageKey;
+    private String message;
     private String path;
+    private String resource;
 
-    @JsonProperty("errors") // Serialize validationErrors as "errors" in JSON
-    private List<ValidationError> validationErrors;
+    @Builder.Default
+    private List<Error> errors = Collections.emptyList();
 
-    public List<ValidationError> getValidationErrors() {
-        return validationErrors == null ? null : Collections.unmodifiableList(validationErrors);
+    // ------------------ Nested Error ------------------
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class Error {
+        private String fieldName;
+        private Object fieldValue;
+        private String message;
     }
 
-    public void setValidationErrors(List<ValidationError> validationErrors) {
-        this.validationErrors = validationErrors == null ? null : new ArrayList<>(validationErrors);
-    }
+    // ------------------ Static helpers ------------------
 
-    public static class ErrorResponseBuilder {
-        public ErrorResponseBuilder validationErrors(List<ValidationError> validationErrors) {
-            this.validationErrors = validationErrors == null ? null : new ArrayList<>(validationErrors);
-            return this;
-        }
+    public static ErrorResponse of(int status, String error, String messageKey, String path, String message, String resource, List<Error> errors) {
+        return ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(status)
+                .error(error)
+                .messageKey(messageKey)
+                .message(message)
+                .path(path)
+                .resource(resource)
+                .errors(errors != null ? errors : Collections.emptyList())
+                .build();
     }
 }

@@ -1,0 +1,76 @@
+version: '3.9'
+
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    container_name: otel-collector
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8889:8889"
+    volumes:
+      - ./otel-config.yml:/etc/otel-config.yml
+    command: ["--config=/etc/otel-config.yml"]
+    networks:
+      - retail-platform
+
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - retail-platform
+
+  grafana:
+    image: grafana/grafana:10.4.1
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - retail-platform
+    depends_on:
+      - prometheus
+
+  loki:
+    image: grafana/loki:2.9.3
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    restart: unless-stopped
+    networks:
+      - retail-platform
+
+  tempo:
+    image: grafana/tempo:2.7.0
+    container_name: tempo
+    ports:
+      - "3200:3200"
+    volumes:
+      - ./tempo-data:/tempo-data
+      - ./tempo-local-config.yaml:/etc/tempo/config.yaml
+    command: -config.file=/etc/tempo/config.yaml
+    networks:
+      - retail-platform
+
+volumes:
+  grafana-storage:
+  loki-data:
+  tempo-data:
+
+networks:
+  retail-platform:
+    external: true

@@ -17,7 +17,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class UserServiceUniquenessTest {
+class UserServiceTest {
 
     @Mock
     private UserRepositoryPort repositoryPort;
@@ -45,161 +45,110 @@ class UserServiceUniquenessTest {
     }
 
     // -------------------- createUser uniqueness --------------------
-
     @Test
     void createUser_usernameAlreadyExists_throwsException() {
-        doThrow(new ResourceAlreadyExistsException(UserConstants.FIELD_USERNAME, UserConstants.USERNAME_ALREADY_EXISTS_KEY))
-                .when(repositoryPort).save(user);
+        when(repositoryPort.existsByUsername(user.getUsername())).thenReturn(true);
 
         ResourceAlreadyExistsException ex = assertThrows(ResourceAlreadyExistsException.class,
                 () -> userService.createUser(user));
 
-        assertEquals(UserConstants.USERNAME_ALREADY_EXISTS_KEY, ex.getKey());
-        assertEquals(UserConstants.FIELD_USERNAME, ex.getField());
-        verify(repositoryPort, times(1)).save(user);
+        assertEquals("User", ex.getResourceName());
+        assertEquals(UserConstants.FIELD_USERNAME, ex.getFieldName());
+        assertEquals(user.getUsername(), ex.getFieldValue());
+        assertEquals(UserConstants.USERNAME_ALREADY_EXISTS_KEY, ex.getMessageKey());
     }
 
     @Test
     void createUser_emailAlreadyExists_throwsException() {
-        doThrow(new ResourceAlreadyExistsException(UserConstants.FIELD_EMAIL, UserConstants.EMAIL_ALREADY_EXISTS_KEY))
-                .when(repositoryPort).save(user);
+        when(repositoryPort.existsByActiveEmail(user.getEmail())).thenReturn(true);
 
         ResourceAlreadyExistsException ex = assertThrows(ResourceAlreadyExistsException.class,
                 () -> userService.createUser(user));
 
-        assertEquals(UserConstants.EMAIL_ALREADY_EXISTS_KEY, ex.getKey());
-        assertEquals(UserConstants.FIELD_EMAIL, ex.getField());
-        verify(repositoryPort, times(1)).save(user);
+        assertEquals("User", ex.getResourceName());
+        assertEquals(UserConstants.FIELD_EMAIL, ex.getFieldName());
+        assertEquals(user.getEmail(), ex.getFieldValue());
+        assertEquals(UserConstants.EMAIL_ALREADY_EXISTS_KEY, ex.getMessageKey());
     }
 
     @Test
     void createUser_phoneNumberAlreadyExists_throwsException() {
-        doThrow(new ResourceAlreadyExistsException(UserConstants.FIELD_PHONE, UserConstants.PHONE_ALREADY_EXISTS_KEY))
-                .when(repositoryPort).save(user);
+        when(repositoryPort.existsByActivePhoneNumber(user.getPhoneNumber())).thenReturn(true);
 
         ResourceAlreadyExistsException ex = assertThrows(ResourceAlreadyExistsException.class,
                 () -> userService.createUser(user));
 
-        assertEquals(UserConstants.PHONE_ALREADY_EXISTS_KEY, ex.getKey());
-        assertEquals(UserConstants.FIELD_PHONE, ex.getField());
-        verify(repositoryPort, times(1)).save(user);
+        assertEquals("User", ex.getResourceName());
+        assertEquals(UserConstants.FIELD_PHONE, ex.getFieldName());
+        assertEquals(user.getPhoneNumber(), ex.getFieldValue());
+        assertEquals(UserConstants.PHONE_ALREADY_EXISTS_KEY, ex.getMessageKey());
     }
 
     // -------------------- updateUser uniqueness --------------------
-
     @Test
     void updateUser_usernameAlreadyExists_throwsException() {
         User existing = new User();
         existing.setId("1");
+        existing.setUsername("oldUsername");
+
+        User conflictingUser = new User();
+        conflictingUser.setId("2"); // different ID
+        conflictingUser.setUsername("alice.smith"); // same username to trigger uniqueness
 
         when(repositoryPort.findActiveById("1")).thenReturn(Optional.of(existing));
-        doThrow(new ResourceAlreadyExistsException(UserConstants.FIELD_USERNAME, UserConstants.USERNAME_ALREADY_EXISTS_KEY))
-                .when(repositoryPort).patch(existing);
+        when(repositoryPort.existsByUsername("alice.smith")).thenReturn(true);
+        when(repositoryPort.findActiveByUsername("alice.smith")).thenReturn(Optional.of(conflictingUser));
 
         ResourceAlreadyExistsException ex = assertThrows(ResourceAlreadyExistsException.class,
                 () -> userService.updateUser("1", user));
 
-        assertEquals(UserConstants.USERNAME_ALREADY_EXISTS_KEY, ex.getKey());
-        assertEquals(UserConstants.FIELD_USERNAME, ex.getField());
-        verify(repositoryPort).findActiveById("1");
-        verify(repositoryPort).patch(existing);
+        assertEquals("User", ex.getResourceName());
+        assertEquals(UserConstants.FIELD_USERNAME, ex.getFieldName());
+        assertEquals(user.getUsername(), ex.getFieldValue());
+        assertEquals(UserConstants.USERNAME_ALREADY_EXISTS_KEY, ex.getMessageKey());
     }
 
     @Test
     void updateUser_emailAlreadyExists_throwsException() {
         User existing = new User();
         existing.setId("1");
+        existing.setEmail("old@example.com");
+
+        User conflictingUser = new User();
+        conflictingUser.setId("2"); // different ID
+        conflictingUser.setEmail(user.getEmail()); // same email to trigger uniqueness
 
         when(repositoryPort.findActiveById("1")).thenReturn(Optional.of(existing));
-        doThrow(new ResourceAlreadyExistsException(UserConstants.FIELD_EMAIL, UserConstants.EMAIL_ALREADY_EXISTS_KEY))
-                .when(repositoryPort).patch(existing);
+        when(repositoryPort.findActiveByEmail(user.getEmail())).thenReturn(Optional.of(conflictingUser));
 
         ResourceAlreadyExistsException ex = assertThrows(ResourceAlreadyExistsException.class,
                 () -> userService.updateUser("1", user));
 
-        assertEquals(UserConstants.EMAIL_ALREADY_EXISTS_KEY, ex.getKey());
-        assertEquals(UserConstants.FIELD_EMAIL, ex.getField());
-        verify(repositoryPort).findActiveById("1");
-        verify(repositoryPort).patch(existing);
+        assertEquals("User", ex.getResourceName());
+        assertEquals(UserConstants.FIELD_EMAIL, ex.getFieldName());
+        assertEquals(user.getEmail(), ex.getFieldValue());
+        assertEquals(UserConstants.EMAIL_ALREADY_EXISTS_KEY, ex.getMessageKey());
     }
 
     @Test
     void updateUser_phoneNumberAlreadyExists_throwsException() {
         User existing = new User();
         existing.setId("1");
+        existing.setPhoneNumber("0987654321");
+
+        User conflictingUser = new User();
+        conflictingUser.setId("2"); // different ID
+        conflictingUser.setPhoneNumber(user.getPhoneNumber()); // same phone to trigger uniqueness
 
         when(repositoryPort.findActiveById("1")).thenReturn(Optional.of(existing));
-        doThrow(new ResourceAlreadyExistsException(UserConstants.FIELD_PHONE, UserConstants.PHONE_ALREADY_EXISTS_KEY))
-                .when(repositoryPort).patch(existing);
+        when(repositoryPort.findActiveByPhoneNumber(user.getPhoneNumber())).thenReturn(Optional.of(conflictingUser));
 
         ResourceAlreadyExistsException ex = assertThrows(ResourceAlreadyExistsException.class,
                 () -> userService.updateUser("1", user));
 
-        assertEquals(UserConstants.PHONE_ALREADY_EXISTS_KEY, ex.getKey());
-        assertEquals(UserConstants.FIELD_PHONE, ex.getField());
-        verify(repositoryPort).findActiveById("1");
-        verify(repositoryPort).patch(existing);
-    }
-
-    // -------------------- patchUser uniqueness --------------------
-
-    @Test
-    void patchUser_usernameAlreadyExists_throwsException() {
-        User existing = new User();
-        existing.setId("1");
-        User patch = new User();
-        patch.setUsername("existingUsername");
-
-        when(repositoryPort.findActiveById("1")).thenReturn(Optional.of(existing));
-        doThrow(new ResourceAlreadyExistsException(UserConstants.FIELD_USERNAME, UserConstants.USERNAME_ALREADY_EXISTS_KEY))
-                .when(repositoryPort).patch(existing);
-
-        ResourceAlreadyExistsException ex = assertThrows(ResourceAlreadyExistsException.class,
-                () -> userService.patchUser("1", patch));
-
-        assertEquals(UserConstants.USERNAME_ALREADY_EXISTS_KEY, ex.getKey());
-        assertEquals(UserConstants.FIELD_USERNAME, ex.getField());
-        verify(repositoryPort).findActiveById("1");
-        verify(repositoryPort).patch(existing);
-    }
-
-    @Test
-    void patchUser_emailAlreadyExists_throwsException() {
-        User existing = new User();
-        existing.setId("1");
-        User patch = new User();
-        patch.setEmail("existing@example.com");
-
-        when(repositoryPort.findActiveById("1")).thenReturn(Optional.of(existing));
-        doThrow(new ResourceAlreadyExistsException(UserConstants.FIELD_EMAIL, UserConstants.EMAIL_ALREADY_EXISTS_KEY))
-                .when(repositoryPort).patch(existing);
-
-        ResourceAlreadyExistsException ex = assertThrows(ResourceAlreadyExistsException.class,
-                () -> userService.patchUser("1", patch));
-
-        assertEquals(UserConstants.EMAIL_ALREADY_EXISTS_KEY, ex.getKey());
-        assertEquals(UserConstants.FIELD_EMAIL, ex.getField());
-        verify(repositoryPort).findActiveById("1");
-        verify(repositoryPort).patch(existing);
-    }
-
-    @Test
-    void patchUser_phoneNumberAlreadyExists_throwsException() {
-        User existing = new User();
-        existing.setId("1");
-        User patch = new User();
-        patch.setPhoneNumber("1234567890");
-
-        when(repositoryPort.findActiveById("1")).thenReturn(Optional.of(existing));
-        doThrow(new ResourceAlreadyExistsException(UserConstants.FIELD_PHONE, UserConstants.PHONE_ALREADY_EXISTS_KEY))
-                .when(repositoryPort).patch(existing);
-
-        ResourceAlreadyExistsException ex = assertThrows(ResourceAlreadyExistsException.class,
-                () -> userService.patchUser("1", patch));
-
-        assertEquals(UserConstants.PHONE_ALREADY_EXISTS_KEY, ex.getKey());
-        assertEquals(UserConstants.FIELD_PHONE, ex.getField());
-        verify(repositoryPort).findActiveById("1");
-        verify(repositoryPort).patch(existing);
+        assertEquals("User", ex.getResourceName());
+        assertEquals(UserConstants.FIELD_PHONE, ex.getFieldName());
+        assertEquals(user.getPhoneNumber(), ex.getFieldValue());
+        assertEquals(UserConstants.PHONE_ALREADY_EXISTS_KEY, ex.getMessageKey());
     }
 }

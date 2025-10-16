@@ -1,20 +1,25 @@
 package com.example.retailplatform.user.adapter.in.web;
 
 import com.example.retailplatform.user.adapter.in.web.dto.UserRequest;
+import com.example.retailplatform.user.config.TestSecurityConfig;
 import com.example.retailplatform.user.domain.model.Role;
 import com.example.retailplatform.user.domain.model.Status;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
+@ActiveProfiles("test")
+@Import(TestSecurityConfig.class)
 @AutoConfigureMockMvc
 class UserModuleIntegrationTest {
 

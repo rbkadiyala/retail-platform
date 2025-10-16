@@ -19,4 +19,5 @@ public class User {
     private Status status;
     private Role role;
     private Boolean active;
+    private String password;
 }

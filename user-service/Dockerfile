@@ -4,30 +4,10 @@
 FROM maven:3.9.2-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Use a dedicated Maven cache volume
-VOLUME /root/.m2
-
-# ----------------------
-# 1️⃣ Copy only POM files to leverage Docker cache
-# ----------------------
-COPY pom.xml ./ 
-COPY auth-service/pom.xml auth-service/
-COPY user-service/pom.xml user-service/
-# Add other modules if any
-
-# ----------------------
-# 2️⃣ Pre-fetch dependencies (cached if POMs unchanged)
-# ----------------------
-RUN mvn dependency:go-offline -B
-
-# ----------------------
-# 3️⃣ Copy full source code
-# ----------------------
+# Copy entire repo (parent POM must be visible)
 COPY . .
 
-# ----------------------
-# 4️⃣ Build only user-service module
-# ----------------------
+# Build only user-service module
 RUN mvn clean package -pl user-service -am -DskipTests
 
 # ----------------------
@@ -36,15 +16,19 @@ RUN mvn clean package -pl user-service -am -DskipTests
 FROM eclipse-temurin:17-jdk
 WORKDIR /app
 
-# ----------------------
-# Copy built JAR from build stage
-# ----------------------
+# Copy the built JAR
 COPY --from=build /app/user-service/target/user-service-1.0.0.jar user-service.jar
 
-# ----------------------
-# Create logs directory
-# ----------------------
+# Create logs directory (hardcoded)
 RUN mkdir -p /app/logs && chmod -R 777 /app/logs
 
-EXPOSE 9083
+# Expose service port
+ARG USER_SERVICE_PORT=9083
+EXPOSE ${USER_SERVICE_PORT}
+
+# Environment variables for Spring Boot (without log path)
+ENV SERVER_PORT=${USER_SERVICE_PORT}
+ENV SPRING_PROFILES_ACTIVE=default
+
+# Run the application
 ENTRYPOINT ["java", "-jar", "user-service.jar"]

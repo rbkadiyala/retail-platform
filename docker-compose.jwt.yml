@@ -1,0 +1,44 @@
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - retail-platform
+    restart: unless-stopped
+
+  jwt-service:
+    build:
+      context: .
+      dockerfile: jwt-service/Dockerfile
+    container_name: jwt-service
+    ports:
+      - "9084:9084"
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_PATH: /app/logs
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+    restart: unless-stopped
+    volumes:
+      - maven-repo:/root/.m2
+      - ./jwt-logs:/app/logs
+    networks:
+      - retail-platform
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9084/actuator/health || exit 1"]
+      interval: 10s
+      retries: 10
+      timeout: 5s
+
+volumes:
+  maven-repo:
+
+networks:
+  retail-platform:
+    external: true

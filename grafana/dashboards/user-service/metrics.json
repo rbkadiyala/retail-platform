@@ -1,0 +1,86 @@
+{
+  "uid": "user-service-metrics",
+  "title": "User Service Metrics",
+  "tags": ["metrics", "user-service"],
+  "timezone": "browser",
+  "schemaVersion": 37,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "type": "gauge",
+      "title": "CPU Usage",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 6},
+      "id": 1,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-main"
+      },
+      "targets": [
+        {
+          "expr": "process_cpu_usage",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "gauge",
+      "title": "Heap Memory Usage",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 6},
+      "id": 2,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-main"
+      },
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{area=\"heap\"}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP Requests per Endpoint",
+      "gridPos": {"x": 0, "y": 6, "w": 12, "h": 8},
+      "id": 3,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-main"
+      },
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count[1m])",
+          "refId": "A",
+          "legendFormat": "{{uri}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "DB Connection Pool Usage",
+      "gridPos": {"x": 12, "y": 6, "w": 12, "h": 8},
+      "id": 4,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-main"
+      },
+      "targets": [
+        {
+          "expr": "hikaricp_connections_active{pool=\"HikariPool-1\"}",
+          "refId": "A",
+          "legendFormat": "Active Connections"
+        },
+        {
+          "expr": "hikaricp_connections_idle{pool=\"HikariPool-1\"}",
+          "refId": "B",
+          "legendFormat": "Idle Connections"
+        }
+      ]
+    }
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  }
+}

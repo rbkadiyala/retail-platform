@@ -19,6 +19,7 @@ public class UserEntityMapper {
                 .status(entity.getStatus())
                 .role(entity.getRole())
                 .active(!entity.isDeleted()) // convert deleted -> active
+                .password(entity.getPassword())
                 .build();
     }
 
@@ -32,9 +33,9 @@ public class UserEntityMapper {
                 .email(user.getEmail())
                 .phoneNumber(user.getPhoneNumber())
                 .status(user.getStatus())
-                .role(user.getRole());
+                .role(user.getRole())
+                .password(user.getPassword()); // <- add this
 
-        // map active -> deleted only if active is non-null; otherwise keep default/DB value
         if (user.getActive() != null) {
             builder.deleted(!user.getActive());
         }
@@ -62,9 +63,11 @@ public class UserEntityMapper {
         if (user.getPhoneNumber() != null) entity.setPhoneNumber(user.getPhoneNumber());
         if (user.getStatus() != null) entity.setStatus(user.getStatus());
         if (user.getRole() != null) entity.setRole(user.getRole());
-        // active is nullable: only update deleted flag if active != null
-        if (user.getActive() != null) {
-            entity.setDeleted(!user.getActive());
+        if (user.getActive() != null) entity.setDeleted(!user.getActive());
+        
+        // Update password if provided
+        if (user.getPassword() != null && !user.getPassword().isBlank()) {
+            entity.setPassword(user.getPassword());
         }
     }
 }

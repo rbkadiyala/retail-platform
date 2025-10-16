@@ -3,129 +3,171 @@ package com.example.retailplatform.user.common;
 import com.example.retailplatform.user.domain.UserConstants;
 import com.example.retailplatform.user.domain.exception.ResourceAlreadyExistsException;
 import com.example.retailplatform.user.domain.exception.ResourceNotFoundException;
-import jakarta.persistence.PersistenceException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.validation.FieldError;
 
-import java.time.Instant;
 import java.util.List;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final Logger appLogger = LogManager.getLogger("com.example.retailplatform");
-
+    private static final Logger log = LogManager.getLogger(GlobalExceptionHandler.class);
     private final MessageSource messageSource;
 
     public GlobalExceptionHandler(MessageSource messageSource) {
         this.messageSource = messageSource;
     }
 
+    // ------------------ Domain Exceptions ------------------
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
-        String key = ex.getKey() != null ? ex.getKey() : UserConstants.USER_NOT_FOUND_KEY;
-        String message = getMessage(key);
-        return buildErrorResponse(HttpStatus.NOT_FOUND, message, key, getPath(request), null, null, ex);
+        String message = getMessage(ex.getMessageKey(), ex.getResourceName(), ex.getResourceId());
+
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.NOT_FOUND.value(),
+                "RESOURCE_NOT_FOUND",
+                ex.getMessageKey(),
+                request.getRequestURI(),
+                message,
+                ex.getResourceName(),
+                List.of(ErrorResponse.Error.builder()
+                        .fieldName("id")
+                        .fieldValue(ex.getResourceId())
+                        .message("Resource not found")
+                        .build())
+        );
+
+        log.warn("Resource not found: {}", error);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleResourceAlreadyExists(ResourceAlreadyExistsException ex, HttpServletRequest request) {
-        String key = ex.getKey() != null ? ex.getKey() : UserConstants.USER_ALREADY_EXISTS_KEY;
-        String message = getMessage(key);
-        return buildErrorResponse(HttpStatus.CONFLICT, message, key, getPath(request), ex.getField(), null, ex);
+        String message = getMessage(ex.getMessageKey(), ex.getResourceName(), ex.getFieldName(), ex.getFieldValue());
+
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.CONFLICT.value(),
+                "RESOURCE_ALREADY_EXISTS",
+                ex.getMessageKey(),
+                request.getRequestURI(),
+                message,
+                ex.getResourceName(),
+                List.of(ErrorResponse.Error.builder()
+                        .fieldName(ex.getFieldName())
+                        .fieldValue(ex.getFieldValue())
+                        .message("Duplicate field value")
+                        .build())
+        );
+
+        log.warn("Resource already exists: {}", error);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
+
+    // ------------------ Validation ------------------
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        List<ValidationError> validationErrors = ex.getBindingResult()
-            .getFieldErrors()
-            .stream()
-            .map(this::mapFieldError)
-            .toList(); 
+        List<ErrorResponse.Error> validationErrors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(this::mapFieldError)
+                .toList();
 
-        String key = UserConstants.VALIDATION_FAILED_KEY;
-
-        // Disambiguate by casting the array to Object[]
-        String message = getMessage(key, (Object) new Object[] { validationErrors.size() });
-
-        return buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                message,
-                key,
-                getPath(request),
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "VALIDATION_FAILED",
+                UserConstants.VALIDATION_FAILED_KEY,
+                request.getRequestURI(),
+                "Validation failed",
                 null,
-                validationErrors,
-                ex
+                validationErrors
         );
+
+        log.warn("Validation failed: {}", error);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest request) {
-        String key = UserConstants.CONSTRAINT_VIOLATION_KEY;
-        String message = getMessage(key);
-        return buildErrorResponse(HttpStatus.CONFLICT, message, key, getPath(request), null, null, ex);
-    }
-
-    @ExceptionHandler(PersistenceException.class)
-    public ResponseEntity<ErrorResponse> handlePersistenceException(PersistenceException ex, HttpServletRequest request) {
-        String key = UserConstants.PERSISTENCE_EXCEPTION_KEY;
-        String message = getMessage(key);
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, getPath(request), null, null, ex);
-    }
-
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex, HttpServletRequest request) {
-        String key = UserConstants.RUNTIME_EXCEPTION_KEY;
-        String message = getMessage(key);
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, key, getPath(request), null, null, ex);
-    }
-
-    // ---------------- Generic error builder ----------------
-    private ResponseEntity<ErrorResponse> buildErrorResponse(HttpStatus status, String message, String key, String path,
-                                                             String field, List<ValidationError> validationErrors, Exception ex) {
-        ErrorResponse error = ErrorResponse.builder()
-                .timestamp(Instant.now())
-                .status(status.value())
-                .error(status.getReasonPhrase())
-                .message(message)
-                .key(key)
-                .field(field)
-                .path(path)
-                .validationErrors(validationErrors)
-                .build();
-
-        if (status.is4xxClientError()) {
-            appLogger.warn("Client error: {}", error, ex);
-        } else {
-            appLogger.error("Server error: {}", error, ex);
-        }
-
-        return ResponseEntity.status(status).body(error);
-    }
-
-    private ValidationError mapFieldError(FieldError fieldError) {
-        return ValidationError.builder()
-                .field(fieldError.getField())
-                .value(fieldError.getRejectedValue())
+    private ErrorResponse.Error mapFieldError(FieldError fieldError) {
+        return ErrorResponse.Error.builder()
+                .fieldName(fieldError.getField())
+                .fieldValue(fieldError.getRejectedValue())
                 .message(fieldError.getDefaultMessage())
                 .build();
     }
 
-    private String getMessage(String key, Object... args) {
-        return messageSource.getMessage(key, args, key, LocaleContextHolder.getLocale());
+    // ------------------ Security ------------------
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
+        String message = getMessage(UserConstants.ERROR_AUTH_FAILED);
+
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.UNAUTHORIZED.value(),
+                "AUTHENTICATION_FAILED",
+                UserConstants.ERROR_AUTH_FAILED,
+                request.getRequestURI(),
+                message,
+                null,
+                List.of()
+        );
+
+        log.warn("Authentication failed: {}", error);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
-    private String getPath(HttpServletRequest request) {
-        return request != null && request.getRequestURI() != null ? request.getRequestURI() : "N/A";
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        String message = getMessage(UserConstants.ERROR_ACCESS_DENIED);
+
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.FORBIDDEN.value(),
+                "ACCESS_DENIED",
+                UserConstants.ERROR_ACCESS_DENIED,
+                request.getRequestURI(),
+                message,
+                null,
+                List.of()
+        );
+
+        log.warn("Access denied: {}", error);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    // ------------------ Generic Exception ------------------
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
+        String message = getMessage(UserConstants.ERROR_INTERNAL_SERVER, ex.getMessage());
+
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "INTERNAL_SERVER_ERROR",
+                UserConstants.ERROR_INTERNAL_SERVER,
+                request.getRequestURI(),
+                message,
+                null,
+                List.of()
+        );
+
+        log.error("Server error: {}", error, ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    // ------------------ Helper ------------------
+
+    private String getMessage(String key, Object... args) {
+        return messageSource.getMessage(key, args, key, LocaleContextHolder.getLocale());
     }
 }

@@ -1,11 +1,13 @@
 package com.example.retailplatform.user.adapter.out.persistence;
 
-import com.example.retailplatform.user.domain.model.User;
+import com.example.retailplatform.user.domain.UserConstants;
+import com.example.retailplatform.user.domain.exception.ResourceAlreadyExistsException;
 import com.example.retailplatform.user.domain.exception.ResourceNotFoundException;
-
+import com.example.retailplatform.user.domain.model.User;
 import com.example.retailplatform.user.domain.port.out.UserRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +20,9 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
 
     @Override
     public User save(User user) {
+        // Check uniqueness before saving
+        checkUniqueFields(user);
+
         UserEntity entity = entityMapper.toEntity(user);
         UserEntity saved = jpaRepository.save(entity);
         return entityMapper.toModel(saved);
@@ -25,9 +30,10 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
 
     @Override
     public List<User> findAllActive() {
-        return jpaRepository.findAllActive().stream()
+        return jpaRepository.findAllActive()
+                .stream()
                 .map(entityMapper::toModel)
-                .toList(); 
+                .toList();
     }
 
     @Override
@@ -73,7 +79,14 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     public User patch(User user) {
         Long pk = parseId(user.getId());
         UserEntity entity = jpaRepository.findActiveById(pk)
-                .orElseThrow(() -> new ResourceNotFoundException("Active user not found: " + user.getId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User",                   // resourceName
+                        user.getId(),             // resourceId
+                        UserConstants.USER_NOT_FOUND_KEY // messageKey
+                ));
+
+        // Check uniqueness for fields being updated
+        checkUniqueFields(user, entity.getId());
 
         entityMapper.updateEntityFromModel(user, entity);
         UserEntity saved = jpaRepository.save(entity);
@@ -89,6 +102,8 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
         });
     }
 
+    // ------------------ Helper Methods ------------------
+
     private Long parseId(String id) {
         try {
             return Long.parseLong(id);
@@ -96,6 +111,59 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
             throw new IllegalArgumentException("Invalid ID: " + id);
         }
     }
+
+    /**
+     * Checks for uniqueness before creating a new user.
+     */
+    private void checkUniqueFields(User user) {
+        checkUsername(user.getUsername(), null);
+        checkEmail(user.getEmail(), null);
+        checkPhone(user.getPhoneNumber(), null);
+    }
+
+    /**
+     * Checks for uniqueness before updating an existing user.
+     * Skips the current user's own record using currentUserId.
+     */
+    private void checkUniqueFields(User user, Long currentUserId) {
+        checkUsername(user.getUsername(), currentUserId);
+        checkEmail(user.getEmail(), currentUserId);
+        checkPhone(user.getPhoneNumber(), currentUserId);
+    }
+
+    private void checkUsername(String username, Long currentUserId) {
+        Optional<UserEntity> existing = jpaRepository.findActiveByUsername(username);
+        if (existing.isPresent() && !existing.get().getId().equals(currentUserId)) {
+            throw new ResourceAlreadyExistsException(
+                    "User",
+                    UserConstants.FIELD_USERNAME,
+                    username,
+                    UserConstants.USERNAME_ALREADY_EXISTS_KEY
+            );
+        }
+    }
+
+    private void checkEmail(String email, Long currentUserId) {
+        Optional<UserEntity> existing = jpaRepository.findActiveByEmail(email);
+        if (existing.isPresent() && !existing.get().getId().equals(currentUserId)) {
+            throw new ResourceAlreadyExistsException(
+                    "User",
+                    UserConstants.FIELD_EMAIL,
+                    email,
+                    UserConstants.EMAIL_ALREADY_EXISTS_KEY
+            );
+        }
+    }
+
+    private void checkPhone(String phoneNumber, Long currentUserId) {
+        Optional<UserEntity> existing = jpaRepository.findActiveByPhoneNumber(phoneNumber);
+        if (existing.isPresent() && !existing.get().getId().equals(currentUserId)) {
+            throw new ResourceAlreadyExistsException(
+                    "User",
+                    UserConstants.FIELD_PHONE,
+                    phoneNumber,
+                    UserConstants.PHONE_ALREADY_EXISTS_KEY
+            );
+        }
+    }
 }
-
-

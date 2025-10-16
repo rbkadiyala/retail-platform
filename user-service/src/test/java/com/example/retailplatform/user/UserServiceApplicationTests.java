@@ -2,15 +2,18 @@ package com.example.retailplatform.user;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
+
+import com.example.retailplatform.user.config.TestSecurityConfig;
 
 @SpringBootTest
+@Import(TestSecurityConfig.class)
+@ActiveProfiles("test")
 class UserServiceApplicationTests {
 
-	@Test
-	void contextLoads() {
-		// This test method is intentionally left empty.
-    	// It verifies that the Spring ApplicationContext can start successfully
-    	// without throwing any exceptions during initialization.
-	}
-
+    @Test
+    void contextLoads() {
+        // This is =not implemented
+    }
 }

@@ -1,0 +1,52 @@
+{
+  "uid": "user-service-traces",
+  "title": "User Service Traces (TraceQL)",
+  "tags": ["traces", "tempo", "user-service"],
+  "timezone": "browser",
+  "schemaVersion": 37,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "type": "trace",
+      "title": "🔹 Recent Traces",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 12 },
+      "id": 1,
+      "datasource": { "type": "tempo", "uid": "tempo-main" },
+      "targets": [
+        { "query": "service.name=\"user-service\" | limit 10", "refId": "A" }
+      ]
+    },
+    {
+      "type": "trace",
+      "title": "🧭 Top Operations",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "id": 2,
+      "datasource": { "type": "tempo", "uid": "tempo-main" },
+      "targets": [
+        { "query": "service.name=\"user-service\" | topk(10, span.name)", "refId": "A" }
+      ]
+    },
+    {
+      "type": "trace",
+      "title": "⏱ Slowest Traces",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "id": 3,
+      "datasource": { "type": "tempo", "uid": "tempo-main" },
+      "targets": [
+        { "query": "service.name=\"user-service\" | sort(duration, desc) | limit 10", "refId": "A" }
+      ]
+    },
+    {
+      "type": "trace",
+      "title": "📊 Average Duration by Operation",
+      "gridPos": { "x": 0, "y": 20, "w": 24, "h": 8 },
+      "id": 4,
+      "datasource": { "type": "tempo", "uid": "tempo-main" },
+      "targets": [
+        { "query": "service.name=\"user-service\" | avg(duration) by (span.name)", "refId": "A" }
+      ]
+    }
+  ],
+  "time": { "from": "now-1h", "to": "now" }
+}

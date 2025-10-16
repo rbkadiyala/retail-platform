@@ -15,7 +15,7 @@
       "id": 1,
       "datasource": {
         "type": "loki",
-        "uid": "ef0sr0pxrdp8gc"
+        "uid": "af0wcjukz7mdcc"
       },
       "targets": [
         {
@@ -37,7 +37,7 @@
       "id": 2,
       "datasource": {
         "type": "loki",
-        "uid": "ef0sr0pxrdp8gc"
+        "uid": "af0wcjukz7mdcc"
       },
       "targets": [
         {
@@ -53,7 +53,7 @@
       "id": 3,
       "datasource": {
         "type": "loki",
-        "uid": "ef0sr0pxrdp8gc"
+        "uid": "af0wcjukz7mdcc"
       },
       "targets": [
         {
@@ -75,7 +75,7 @@
       "id": 4,
       "datasource": {
         "type": "loki",
-        "uid": "ef0sr0pxrdp8gc"
+        "uid": "af0wcjukz7mdcc"
       },
       "targets": [
         {
@@ -95,7 +95,7 @@
       "id": 5,
       "datasource": {
         "type": "loki",
-        "uid": "ef0sr0pxrdp8gc"
+        "uid": "af0wcjukz7mdcc"
       },
       "targets": [
         {
@@ -111,7 +111,7 @@
       "id": 6,
       "datasource": {
         "type": "loki",
-        "uid": "ef0sr0pxrdp8gc"
+        "uid": "af0wcjukz7mdcc"
       },
       "targets": [
         {

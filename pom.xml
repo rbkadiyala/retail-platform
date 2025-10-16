@@ -12,6 +12,7 @@
     <modules>
         <module>user-service</module>
         <module>auth-service</module>
+        <module>jwt-service</module>
     </modules>
 
     <properties>

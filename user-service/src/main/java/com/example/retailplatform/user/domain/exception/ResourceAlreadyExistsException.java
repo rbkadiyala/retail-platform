@@ -1,24 +1,32 @@
 package com.example.retailplatform.user.domain.exception;
 
-import com.example.retailplatform.user.domain.UserConstants;
+import java.io.Serializable;
+
 import lombok.Getter;
 
 @Getter
 public class ResourceAlreadyExistsException extends RuntimeException {
-    private final String field;
-    private final String key;
 
-    // Only key is passed, message will be resolved in the handler
-    public ResourceAlreadyExistsException(String field, String key) {
-        super(); // No message here
-        this.field = field;
-        this.key = key;
-    }
+    private static final long serialVersionUID = 1L;
 
-    // Default key constructor
-    public ResourceAlreadyExistsException(String field) {
-        super();
-        this.field = field;
-        this.key = UserConstants.USER_ALREADY_EXISTS_KEY;
+    private final String resourceName;
+    private final String fieldName;
+    private final transient Serializable fieldValue; // safe for serialization
+    private final String messageKey;
+
+    /**
+     * Constructs an exception using a message key defined in Constants.
+     *
+     * @param resourceName Name of the resource (e.g., "User")
+     * @param fieldName    Name of the field that caused the conflict
+     * @param fieldValue   Value of the conflicting field, must be Serializable
+     * @param messageKey   Key from messages.properties for i18n
+     */
+    public ResourceAlreadyExistsException(String resourceName, String fieldName, Serializable fieldValue, String messageKey) {
+        super(); // message will be resolved in GlobalExceptionHandler
+        this.resourceName = resourceName;
+        this.fieldName = fieldName;
+        this.fieldValue = fieldValue;
+        this.messageKey = messageKey;
     }
 }

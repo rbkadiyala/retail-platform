@@ -3,6 +3,8 @@ package com.example.retailplatform.user.adapter.out.persistence;
 import com.example.retailplatform.user.domain.UserConstants;
 import com.example.retailplatform.user.domain.model.Role;
 import com.example.retailplatform.user.domain.model.Status;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,6 +51,10 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    @JsonIgnore
+    @Column(nullable = true)    
+    private String password; // hashed password
 
     private String createdBy;
     private LocalDateTime createdAt;

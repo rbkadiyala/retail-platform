@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -21,6 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Uses Spring Boot 3.4+ compatible mock configuration.
  */
 @WebMvcTest(UserController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @Import(UserControllerValidationTest.MockBeans.class)
 class UserControllerValidationTest {
 
@@ -66,7 +68,7 @@ class UserControllerValidationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors").isArray())
-                .andExpect(jsonPath("$.errors[?(@.field=='email')]").exists());
+                .andExpect(jsonPath("$.errors[?(@.fieldName=='email')]").exists());
     }
 
     @Test
@@ -78,11 +80,11 @@ class UserControllerValidationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors").isArray())
-                .andExpect(jsonPath("$.errors[?(@.field=='firstName')]").exists())
-                .andExpect(jsonPath("$.errors[?(@.field=='lastName')]").exists())
-                .andExpect(jsonPath("$.errors[?(@.field=='username')]").exists())
-                .andExpect(jsonPath("$.errors[?(@.field=='email')]").exists())
-                .andExpect(jsonPath("$.errors[?(@.field=='phoneNumber')]").exists());
+                .andExpect(jsonPath("$.errors[?(@.fieldName=='firstName')]").exists())
+                .andExpect(jsonPath("$.errors[?(@.fieldName=='lastName')]").exists())
+                .andExpect(jsonPath("$.errors[?(@.fieldName=='username')]").exists())
+                .andExpect(jsonPath("$.errors[?(@.fieldName=='email')]").exists())
+                .andExpect(jsonPath("$.errors[?(@.fieldName=='phoneNumber')]").exists());
     }
 
     @Test
@@ -99,6 +101,6 @@ class UserControllerValidationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors").isArray())
-                .andExpect(jsonPath("$.errors[?(@.field=='phoneNumber')]").exists());
+                .andExpect(jsonPath("$.errors[?(@.fieldName=='phoneNumber')]").exists());
     }
 }

@@ -31,7 +31,7 @@ public class UserService implements UserUseCase {
         if (user.getRole() == null) user.setRole(Role.USER);
         if (user.getActive() == null) user.setActive(true);
 
-        // Uniqueness checks using constants
+        // Uniqueness checks
         ensureUniqueGlobal(user.getUsername(), UserConstants.FIELD_USERNAME, UserConstants.USERNAME_ALREADY_EXISTS_KEY);
         ensureUniqueActive(user.getEmail(), UserConstants.FIELD_EMAIL, repositoryPort::existsByActiveEmail, UserConstants.EMAIL_ALREADY_EXISTS_KEY);
         ensureUniqueActive(user.getPhoneNumber(), UserConstants.FIELD_PHONE, repositoryPort::existsByActivePhoneNumber, UserConstants.PHONE_ALREADY_EXISTS_KEY);
@@ -42,7 +42,9 @@ public class UserService implements UserUseCase {
     @Override
     public User getUserById(String id) {
         return repositoryPort.findActiveById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(UserConstants.USER_NOT_FOUND_KEY));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User", id, UserConstants.USER_NOT_FOUND_KEY
+                ));
     }
 
     @Override
@@ -55,7 +57,7 @@ public class UserService implements UserUseCase {
         User existing = getUserById(id);
         update.setId(id);
 
-        // Update uniqueness checks using constants
+        // Update uniqueness checks
         ensureUniqueGlobalForUpdate(update.getUsername(), existing.getId(), UserConstants.FIELD_USERNAME, UserConstants.USERNAME_ALREADY_EXISTS_KEY);
         ensureUniqueActiveForUpdate(update.getEmail(), existing.getId(), repositoryPort::findActiveByEmail, UserConstants.FIELD_EMAIL, UserConstants.EMAIL_ALREADY_EXISTS_KEY);
         ensureUniqueActiveForUpdate(update.getPhoneNumber(), existing.getId(), repositoryPort::findActiveByPhoneNumber, UserConstants.FIELD_PHONE, UserConstants.PHONE_ALREADY_EXISTS_KEY);
@@ -103,22 +105,22 @@ public class UserService implements UserUseCase {
 
     private void ensureUniqueGlobal(String value, String fieldName, String key) {
         if (value != null && repositoryPort.existsByUsername(value)) {
-            throw new ResourceAlreadyExistsException(fieldName, key);
+            throw new ResourceAlreadyExistsException("User", fieldName, value, key);
         }
     }
 
     private void ensureUniqueActive(String value, String fieldName, Predicate<String> existsChecker, String key) {
         if (value != null && existsChecker.test(value)) {
-            throw new ResourceAlreadyExistsException(fieldName, key);
+            throw new ResourceAlreadyExistsException("User", fieldName, value, key);
         }
     }
 
     private void ensureUniqueGlobalForUpdate(String value, String currentUserId, String fieldName, String key) {
-        if (value != null && repositoryPort.existsByUsername(value)) {
+        if (value != null) {
             repositoryPort.findActiveByUsername(value)
                     .filter(u -> !u.getId().equals(currentUserId))
                     .ifPresent(u -> {
-                        throw new ResourceAlreadyExistsException(fieldName, key);
+                        throw new ResourceAlreadyExistsException("User", fieldName, value, key);
                     });
         }
     }
@@ -130,7 +132,7 @@ public class UserService implements UserUseCase {
             finder.apply(value)
                     .filter(u -> !u.getId().equals(currentUserId))
                     .ifPresent(u -> {
-                        throw new ResourceAlreadyExistsException(fieldName, key);
+                        throw new ResourceAlreadyExistsException("User", fieldName, value, key);
                     });
         }
     }
@@ -160,3 +162,4 @@ public class UserService implements UserUseCase {
         return false;
     }
 }
+
