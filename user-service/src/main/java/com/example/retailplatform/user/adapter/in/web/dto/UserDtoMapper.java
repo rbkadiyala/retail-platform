@@ -18,7 +18,7 @@ public class UserDtoMapper {
                 .phoneNumber(request.getPhoneNumber())
                 .status(request.getStatus())
                 .role(request.getRole())
-                .active(request.getActive() != null && request.getActive()) // ✅ safer null handling
+                .active(request.getActive())
                 .build();
     }
 
@@ -33,9 +33,9 @@ public class UserDtoMapper {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .phoneNumber(user.getPhoneNumber())
-                .status(user.getStatus() != null ? user.getStatus().name() : null)
-                .role(user.getRole() != null ? user.getRole().name() : null)
-                .active(user.getActive() != null && user.getActive()) // ✅ no need for null check — primitive
+                .status(user.getStatus().name())
+                .role(user.getRole().name())
+                .active(user.getActive())
                 .build();
     }
 }

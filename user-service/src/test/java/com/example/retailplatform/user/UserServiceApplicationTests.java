@@ -14,6 +14,6 @@ class UserServiceApplicationTests {
 
     @Test
     void contextLoads() {
-        // This is =not implemented
+        // Test just ensures the Spring context loads without errors 
     }
 }

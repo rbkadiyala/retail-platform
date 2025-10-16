@@ -20,11 +20,11 @@
         <springdoc.version>2.8.13</springdoc.version>
         <logstash.logback.version>7.4</logstash.logback.version>
         <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
+        <jacoco.version>0.8.11</jacoco.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <!-- Optional: OTEL BOM for consistent versions -->
             <dependency>
                 <groupId>io.opentelemetry</groupId>
                 <artifactId>opentelemetry-bom</artifactId>
@@ -153,7 +153,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Spring Boot plugin with build info -->
+            <!-- Spring Boot plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -166,6 +166,48 @@
                         <goals>
                             <goal>repackage</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- JaCoCo plugin -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <!-- Prepare agent -->
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- Generate report -->
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
+                            <formats>
+                                <format>XML</format>
+                                <format>HTML</format>
+                            </formats>
+                            <excludes>
+                                <!-- Exclude config and main class -->
+                                <exclude>**/config/**</exclude>
+                                <exclude>**/adapter/out/monitoring/DatabaseInfoContributor.class</exclude>
+                                <exclude>**/adapter/in/web/LoadUserDatabase.class</exclude>
+                                <exclude>**/adapter/in/web/ObservabilityFilter.class</exclude>
+                                <exclude>**/domain/UserConstants.class</exclude>
+                                <exclude>**/util/MdcUtil.class</exclude>
+                                <exclude>**/UserServiceApplication.class</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

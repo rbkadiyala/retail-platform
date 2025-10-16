@@ -76,6 +76,6 @@ public class LoadUserDatabase {
                 passwordEncoder.encode(rawPassword) // Now works
         );
         userRepository.save(user);
-        log.info("Created user '{}' with password hash '{}'", username, user.getPassword());
+        
     }
 }

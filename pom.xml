@@ -27,9 +27,13 @@
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.sourceEncoding>UTF-8</sonar.sourceEncoding>
 
-        <!-- Coverage reports -->
-        <sonar.coverage.jacoco.xmlReportPaths>**/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-    </properties>
+        <!-- Coverage reports for all modules -->
+        <sonar.coverage.jacoco.xmlReportPaths>
+            user-service/target/site/jacoco/jacoco.xml,
+            auth-service/target/site/jacoco/jacoco.xml,
+            jwt-service/target/site/jacoco/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
+    </properties> 
 
     <dependencyManagement>
         <dependencies>
@@ -46,15 +50,14 @@
     <build>
         <pluginManagement>
             <plugins>
-
-                <!-- Spring Boot -->
+                <!-- Spring Boot plugin -->
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${spring.boot.version}</version>
                 </plugin>
 
-                <!-- Compiler -->
+                <!-- Compiler plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
@@ -66,20 +69,27 @@
                     </configuration>
                 </plugin>
 
-                <!-- JaCoCo -->
+                <!-- JaCoCo plugin -->
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
                     <version>0.8.11</version>
                     <executions>
+                        <!-- Prepare agent for all tests -->
                         <execution>
                             <id>prepare-agent</id>
-                            <goals><goal>prepare-agent</goal></goals>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
                         </execution>
+
+                        <!-- Generate report after tests -->
                         <execution>
                             <id>report</id>
                             <phase>verify</phase>
-                            <goals><goal>report</goal></goals>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
                             <configuration>
                                 <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
                                 <formats>
@@ -91,13 +101,12 @@
                     </executions>
                 </plugin>
 
-                <!-- Sonar Maven Plugin -->
+                <!-- Sonar Maven plugin -->
                 <plugin>
                     <groupId>org.sonarsource.scanner.maven</groupId>
                     <artifactId>sonar-maven-plugin</artifactId>
                     <version>5.1.0.4751</version>
                 </plugin>
-
             </plugins>
         </pluginManagement>
     </build>
@@ -162,4 +171,5 @@
             </build>
         </profile>
     </profiles>
+
 </project>
