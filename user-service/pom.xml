@@ -198,14 +198,24 @@
                                 <format>HTML</format>
                             </formats>
                             <excludes>
-                                <!-- Exclude config and main class -->
-                                <exclude>**/config/**</exclude>
-                                <exclude>**/adapter/out/monitoring/DatabaseInfoContributor.class</exclude>
-                                <exclude>**/adapter/in/web/LoadUserDatabase.class</exclude>
-                                <exclude>**/adapter/in/web/ObservabilityFilter.class</exclude>
-                                <exclude>**/domain/UserConstants.class</exclude>
-                                <exclude>**/util/MdcUtil.class</exclude>
-                                <exclude>**/UserServiceApplication.class</exclude>
+                                <!-- Filters, adapters, and cross-cutting code 
+                                <exclude>com/example/retailplatform/user/adapter/in/web/ObservabilityFilter.class</exclude>
+                                <exclude>com/example/retailplatform/user/adapter/out/security/UserDetailsServiceAdapter.class</exclude>
+                                <exclude>com/example/retailplatform/user/adapter/out/security/UserDetailsServiceAdapter$CustomUserDetails.class</exclude>
+                                <exclude>com/example/retailplatform/user/adapter/out/monitoring/DatabaseInfoContributor.class</exclude>
+                                -->    
+                                <!-- Constants / utility  
+                                <exclude>com/example/retailplatform/user/domain/UserConstants.class</exclude>
+                                <exclude>com/example/retailplatform/user/util/MdcUtil.class</exclude>
+                                -->
+                                <!-- Optional DTO/mapper/assembler 
+                                <exclude>com/example/retailplatform/user/adapter/in/web/dto/LoadUserDatabase.class</exclude>
+                                -->
+                                <!-- Spring configs -->
+                                <exclude>com/example/retailplatform/user/util/MdcUtil.class</exclude>
+                                <exclude>com/example/retailplatform/user/domain/UserConstants.class</exclude>
+                                <exclude>com/example/retailplatform/user/config/SecurityConfig.class</exclude>   
+                                <exclude>com/example/retailplatform/user/config/OpenTelemetryConfig.class</exclude>                             
                             </excludes>
                         </configuration>
                     </execution>

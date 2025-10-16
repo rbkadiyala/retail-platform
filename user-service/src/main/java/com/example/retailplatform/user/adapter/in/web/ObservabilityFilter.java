@@ -54,8 +54,8 @@ public class ObservabilityFilter extends OncePerRequestFilter {
 
         // Put observability fields in MDC
         MDC.put("correlationId", correlationId);
-        MDC.put("traceId", spanContext.isValid() ? spanContext.getTraceId() : "-");
-        MDC.put("spanId", spanContext.isValid() ? spanContext.getSpanId() : "-");
+        MDC.put("traceId", spanContext.getTraceId());
+        MDC.put("spanId", spanContext.getSpanId());
 
         // Add Correlation ID to response headers
         wrappedResponse.setHeader(CORRELATION_HEADER, correlationId);
