@@ -46,4 +46,7 @@ public class UserResponse extends RepresentationModel<UserResponse> {
             example = "true",
             defaultValue = "false")
     private boolean active;  // primitive -> clients never see null
+
+    @Schema(description = "Whether password change is required", example = "true")
+    private Boolean passwordChangeRequired;
 }

@@ -33,6 +33,9 @@ public final class UserConstants {
     public static final String MESSAGE_PLACEHOLDER = "mockMessage";
     public static final String SYSTEM = "System";
 
+    public static final String ERROR_METHOD_NOT_ALLOWED = "error.method.not.allowed";
+    public static final String ERROR_UNSUPPORTED_MEDIA_TYPE = "error.unsupported.media.type";
+
     // Private constructor to prevent instantiation
     private UserConstants() {
         throw new UnsupportedOperationException("UserConstants is a utility class and should not be instantiated");

@@ -1,0 +1,239 @@
+services:
+  # -----------------------------
+  # PostgreSQL for Keycloak
+  # -----------------------------
+  keycloak-db:
+    image: postgres:15
+    container_name: keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    ports:
+      - "5432:5432"
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql/data
+    networks:
+      - retail-platform
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      retries: 10
+      timeout: 5s
+
+  # -----------------------------
+  # Keycloak
+  # -----------------------------
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1.1
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-db
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_DB_DATABASE: keycloak
+      KC_HEALTH_ENABLED: "true"
+    command: start-dev
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - retail-platform
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://keycloak:8080/realms/master || exit 1"]
+      interval: 10s
+      retries: 10
+      timeout: 10s
+
+  # -----------------------------
+  # Auth Service
+  # -----------------------------
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: auth-service
+    ports:
+      - "9082:9082"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    environment:
+      KEYCLOAK_URL: http://keycloak:8080
+      LOG_PATH: /app/logs
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_METRICS_EXPORTER: "otlp"
+      OTEL_TRACES_EXPORTER: "otlp"
+      OTEL_RESOURCE_ATTRIBUTES: "service.name=auth-service"
+    restart: unless-stopped
+    volumes:
+      - maven-repo:/root/.m2
+      - ./auth-logs:/app/logs
+    networks:
+      - retail-platform
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://keycloak:8080/realms/master || exit 1"]
+      interval: 10s
+      retries: 10
+      timeout: 5s
+
+  # -----------------------------
+  # User Service
+  # -----------------------------
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    container_name: user-service
+    ports:
+      - "9083:9083"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:9082
+      KEYCLOAK_URL: http://keycloak:8080
+      LOG_PATH: /app/logs
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_METRICS_EXPORTER: "otlp"
+      OTEL_TRACES_EXPORTER: "otlp"
+      OTEL_RESOURCE_ATTRIBUTES: "service.name=user-service"
+    restart: unless-stopped
+    volumes:
+      - maven-repo:/root/.m2
+      - ./user-logs:/app/logs
+    networks:
+      - retail-platform
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://auth-service:9082/actuator/health || exit 1"]
+      interval: 10s
+      retries: 10
+      timeout: 5s
+
+  # -----------------------------
+  # OpenTelemetry Collector
+  # -----------------------------
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    container_name: otel-collector
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8889:8889"
+    volumes:
+      - ./otel-config.yml:/etc/otel-config.yml
+    command: ["--config=/etc/otel-config.yml"]
+    networks:
+      - retail-platform
+
+  # -----------------------------
+  # Tempo (Traces)
+  # -----------------------------
+  tempo:
+    image: grafana/tempo:2.7.0
+    container_name: tempo
+    ports:
+      - "3200:3200"
+    volumes:
+      - ./tempo-data:/tempo-data
+      - ./tempo-local-config.yaml:/etc/tempo/config.yaml
+    command: -config.file=/etc/tempo/config.yaml
+    networks:
+      - retail-platform
+
+  # -----------------------------
+  # Prometheus (Metrics)
+  # -----------------------------
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - retail-platform
+
+  # -----------------------------
+  # Grafana (Dashboard)
+  # -----------------------------
+  grafana:
+    image: grafana/grafana:10.4.1
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - retail-platform
+    depends_on:
+      - prometheus
+      - tempo
+      - loki
+
+  # -----------------------------
+  # Loki (Logs)
+  # -----------------------------
+  loki:
+    image: grafana/loki:2.9.3
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    restart: unless-stopped
+    networks:
+      - retail-platform
+
+  # -----------------------------
+  # Promtail (Log collector)
+  # -----------------------------
+  promtail:
+    image: grafana/promtail:2.9.3
+    container_name: promtail
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yaml
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./auth-logs:/app/auth/logs
+      - ./user-logs:/app/user/logs
+      - promtail-positions:/promtail
+    command: -config.file=/etc/promtail/config.yaml
+    restart: unless-stopped
+    networks:
+      - retail-platform
+    depends_on:
+      - loki
+
+# -----------------------------
+# Volumes
+# -----------------------------
+volumes:
+  maven-repo:
+  grafana-storage:
+  loki-data:
+  promtail-positions:
+  keycloak-db-data:
+
+# -----------------------------
+# Networks
+# -----------------------------
+networks:
+  retail-platform:
+    driver: bridge

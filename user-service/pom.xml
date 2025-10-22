@@ -20,7 +20,9 @@
         <springdoc.version>2.8.13</springdoc.version>
         <logstash.logback.version>7.4</logstash.logback.version>
         <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
-        <jacoco.version>0.8.11</jacoco.version>
+        <jacoco.version>0.8.14</jacoco.version>
+        <lombok.version>1.18.42</lombok.version>
+        <spring-boot-configuration-processor.version>${spring.boot.version}</spring-boot-configuration-processor.version>
     </properties>
 
     <dependencyManagement>
@@ -123,6 +125,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -141,7 +144,7 @@
 
     <build>
         <plugins>
-            <!-- Compiler plugin -->
+            <!-- Compiler plugin with Lombok annotation processor -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -150,17 +153,26 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <parameters>true</parameters>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
+                            <version>${spring-boot-configuration-processor.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 
-            <!-- Spring Boot plugin -->
+            <!-- Spring Boot plugin with explicit repackage goal -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring.boot.version}</version>
-                <configuration>
-                    <buildInfo/>
-                </configuration>
                 <executions>
                     <execution>
                         <goals>
@@ -168,6 +180,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <buildInfo/>
+                </configuration>
             </plugin>
 
             <!-- JaCoCo plugin -->
@@ -176,47 +191,20 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
                 <executions>
-                    <!-- Prepare agent -->
                     <execution>
                         <id>prepare-agent</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
+                        <goals><goal>prepare-agent</goal></goals>
                     </execution>
-
-                    <!-- Generate report -->
                     <execution>
                         <id>report</id>
                         <phase>verify</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
+                        <goals><goal>report</goal></goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
                             <formats>
                                 <format>XML</format>
                                 <format>HTML</format>
                             </formats>
-                            <excludes>
-                                <!-- Filters, adapters, and cross-cutting code 
-                                <exclude>com/example/retailplatform/user/adapter/in/web/ObservabilityFilter.class</exclude>
-                                <exclude>com/example/retailplatform/user/adapter/out/security/UserDetailsServiceAdapter.class</exclude>
-                                <exclude>com/example/retailplatform/user/adapter/out/security/UserDetailsServiceAdapter$CustomUserDetails.class</exclude>
-                                <exclude>com/example/retailplatform/user/adapter/out/monitoring/DatabaseInfoContributor.class</exclude>
-                                -->    
-                                <!-- Constants / utility  
-                                <exclude>com/example/retailplatform/user/domain/UserConstants.class</exclude>
-                                <exclude>com/example/retailplatform/user/util/MdcUtil.class</exclude>
-                                -->
-                                <!-- Optional DTO/mapper/assembler 
-                                <exclude>com/example/retailplatform/user/adapter/in/web/dto/LoadUserDatabase.class</exclude>
-                                -->
-                                <!-- Spring configs -->
-                                <exclude>com/example/retailplatform/user/util/MdcUtil.class</exclude>
-                                <exclude>com/example/retailplatform/user/domain/UserConstants.class</exclude>
-                                <exclude>com/example/retailplatform/user/config/SecurityConfig.class</exclude>   
-                                <exclude>com/example/retailplatform/user/config/OpenTelemetryConfig.class</exclude>                             
-                            </excludes>
                         </configuration>
                     </execution>
                 </executions>

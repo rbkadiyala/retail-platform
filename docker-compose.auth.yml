@@ -1,22 +1,22 @@
-version: '3.9'
-
 services:
   keycloak-db:
     image: postgres:15
     container_name: keycloak-db
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: keycloak
+      POSTGRES_DB: ${KEYCLOAK_DB_NAME}
+      POSTGRES_USER: ${KEYCLOAK_DB_USER}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${KEYCLOAK_DB_PORT}:5432"
     volumes:
       - keycloak-db-data:/var/lib/postgresql/data
     networks:
       - retail-platform
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      test: ["CMD-SHELL", "pg_isready -h keycloak-db -U ${KEYCLOAK_DB_USER} -d ${KEYCLOAK_DB_NAME}"]
       interval: 10s
       retries: 10
       timeout: 5s
@@ -24,18 +24,20 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:21.1.1
     container_name: keycloak
+    env_file:
+      - .env
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KC_DB: postgres
       KC_DB_URL_HOST: keycloak-db
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: keycloak
-      KC_DB_DATABASE: keycloak
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_DB_DATABASE: ${KEYCLOAK_DB_NAME}
       KC_HEALTH_ENABLED: "true"
     command: start-dev
     ports:
-      - "8080:8080"
+      - "${KEYCLOAK_PORT}:8080"
     networks:
       - retail-platform
     depends_on:
@@ -51,19 +53,21 @@ services:
   auth-db:
     image: postgres:15
     container_name: auth-db
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: auth_db
-      POSTGRES_USER: auth_user
-      POSTGRES_PASSWORD: auth_pass
+      POSTGRES_DB: ${AUTH_DB_NAME}
+      POSTGRES_USER: ${AUTH_DB_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
     ports:
-      - "5434:5432"
+      - "${AUTH_DB_PORT}:5432"
     volumes:
       - auth-db-data:/var/lib/postgresql/data
     networks:
       - retail-platform
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U auth_user -d auth_db"]
+      test: ["CMD-SHELL", "pg_isready -h auth-db -U ${AUTH_DB_USER} -d ${AUTH_DB_NAME}"]
       interval: 10s
       retries: 10
       timeout: 5s
@@ -73,21 +77,24 @@ services:
       context: .
       dockerfile: auth-service/Dockerfile
     container_name: auth-service
+    env_file:
+      - .env
     ports:
-      - "9082:9082"
+      - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
     depends_on:
       keycloak:
         condition: service_healthy
       auth-db:
         condition: service_healthy
     environment:
-      KEYCLOAK_URL: http://keycloak:8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/auth_db
-      SPRING_DATASOURCE_USERNAME: auth_user
-      SPRING_DATASOURCE_PASSWORD: auth_pass
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: "true"
+      KEYCLOAK_URL: http://keycloak:${KEYCLOAK_PORT}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/${AUTH_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${AUTH_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${AUTH_DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
       LOG_PATH: /app/logs
+      SERVER_PORT: ${AUTH_SERVICE_PORT}
     restart: unless-stopped
     volumes:
       - maven-repo:/root/.m2

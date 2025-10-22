@@ -21,10 +21,23 @@ public class DatabaseInfoContributor implements InfoContributor {
     public void contribute(Info.Builder builder) {
         String dbStatus = "UP";
         String dbError = null;
+        boolean adminExists = false;
 
         try {
+            // ✅ Simple query to check database connectivity
             jdbcTemplate.queryForObject("SELECT 1", Integer.class);
             log.info("Database connectivity check passed for user-service");
+
+            // ✅ Check if admin user exists (using non-deprecated API)
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM users WHERE username = ? AND active = true",
+                    Integer.class,
+                    "admin"   // varargs, no Object[]
+            );
+
+            adminExists = count != null && count > 0;
+            log.info("Admin user exists: {}", adminExists);
+
         } catch (Exception e) {
             dbStatus = "DOWN";
             dbError = e.getMessage();
@@ -34,7 +47,8 @@ public class DatabaseInfoContributor implements InfoContributor {
         builder.withDetail("service", "User Service")
                .withDetail("version", "1.0.0")
                .withDetail("description", "Handles user management and authentication")
-               .withDetail("dbStatus", dbStatus);
+               .withDetail("dbStatus", dbStatus)
+               .withDetail("adminUserExists", adminExists);
 
         if (dbError != null) {
             builder.withDetail("dbError", dbError);

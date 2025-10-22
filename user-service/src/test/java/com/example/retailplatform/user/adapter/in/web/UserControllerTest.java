@@ -3,6 +3,7 @@ package com.example.retailplatform.user.adapter.in.web;
 import com.example.retailplatform.user.adapter.in.web.dto.UserDtoMapper;
 import com.example.retailplatform.user.adapter.in.web.dto.UserRequest;
 import com.example.retailplatform.user.adapter.in.web.dto.UserResponse;
+import com.example.retailplatform.user.adapter.in.web.dto.UserSearchRequest;
 import com.example.retailplatform.user.domain.model.Role;
 import com.example.retailplatform.user.domain.model.Status;
 import com.example.retailplatform.user.domain.model.User;
@@ -90,7 +91,8 @@ class UserControllerTest {
         when(userDtoMapper.toResponse(user)).thenReturn(userResponse);
         when(assembler.toModel(userResponse)).thenReturn(entityModel);
 
-        CollectionModel<EntityModel<UserResponse>> result = userController.all();
+        ResponseEntity<CollectionModel<EntityModel<UserResponse>>> response = userController.all();
+        CollectionModel<EntityModel<UserResponse>> result = response.getBody();
 
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
@@ -104,7 +106,8 @@ class UserControllerTest {
         when(userDtoMapper.toResponse(user)).thenReturn(userResponse);
         when(assembler.toModel(userResponse)).thenReturn(entityModel);
 
-        EntityModel<UserResponse> result = userController.one("1");
+        ResponseEntity<EntityModel<UserResponse>> response = userController.one("1");
+        EntityModel<UserResponse> result = response.getBody();
 
         assertNotNull(result);
         assertEquals("1", result.getContent().getId());
@@ -120,10 +123,12 @@ class UserControllerTest {
         when(assembler.toModel(userResponse)).thenReturn(entityModel);
 
         ResponseEntity<EntityModel<UserResponse>> response = userController.newUser(userRequest);
+        EntityModel<UserResponse> result = response.getBody();
 
         assertNotNull(response);
         assertEquals(201, response.getStatusCode().value());
-        assertTrue(response.getBody().getLinks().hasLink("self"));
+        assertNotNull(result);
+        assertTrue(result.getLinks().hasLink("self"));
         verify(userUseCase, times(1)).createUser(user);
     }
 
@@ -135,10 +140,12 @@ class UserControllerTest {
         when(assembler.toModel(userResponse)).thenReturn(entityModel);
 
         ResponseEntity<EntityModel<UserResponse>> response = userController.replaceUser("1", userRequest);
+        EntityModel<UserResponse> result = response.getBody();
 
         assertNotNull(response);
         assertEquals(201, response.getStatusCode().value());
-        assertTrue(response.getBody().getLinks().hasLink("self"));
+        assertNotNull(result);
+        assertTrue(result.getLinks().hasLink("self"));
         verify(userUseCase, times(1)).updateUser("1", user);
     }
 
@@ -150,10 +157,12 @@ class UserControllerTest {
         when(assembler.toModel(userResponse)).thenReturn(entityModel);
 
         ResponseEntity<EntityModel<UserResponse>> response = userController.patchUser("1", userRequest);
+        EntityModel<UserResponse> result = response.getBody();
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
-        assertTrue(response.getBody().getLinks().hasLink("self"));
+        assertNotNull(result);
+        assertTrue(result.getLinks().hasLink("self"));
         verify(userUseCase, times(1)).patchUser("1", user);
     }
 
@@ -166,5 +175,27 @@ class UserControllerTest {
         assertNotNull(response);
         assertEquals(204, response.getStatusCode().value());
         verify(userUseCase, times(1)).softDeleteUser("1");
+    }
+
+    @Test
+    void search_returnsCollectionModelWithHeaders() {
+        UserSearchRequest searchRequest = new UserSearchRequest();
+        searchRequest.setEmail("alice@example.com");
+
+        when(userUseCase.searchUsers(null, "alice@example.com", null)).thenReturn(List.of(user));
+        when(userDtoMapper.toResponse(user)).thenReturn(userResponse);
+        when(assembler.toModel(userResponse)).thenReturn(entityModel);
+
+        ResponseEntity<CollectionModel<EntityModel<UserResponse>>> response = userController.search(searchRequest);
+        CollectionModel<EntityModel<UserResponse>> result = response.getBody();
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertTrue(result.getContent().iterator().next().getLinks().hasLink("self"));
+        assertEquals("1", response.getHeaders().getFirst("X-Total-Count"));
+
+        verify(userUseCase, times(1)).searchUsers(null, "alice@example.com", null);
     }
 }

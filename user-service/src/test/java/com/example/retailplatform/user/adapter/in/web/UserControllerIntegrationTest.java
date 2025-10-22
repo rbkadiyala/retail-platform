@@ -3,7 +3,7 @@ package com.example.retailplatform.user.adapter.in.web;
 import com.example.retailplatform.user.adapter.in.web.dto.UserDtoMapper;
 import com.example.retailplatform.user.adapter.in.web.dto.UserRequest;
 import com.example.retailplatform.user.adapter.in.web.dto.UserResponse;
-import com.example.retailplatform.user.common.GlobalExceptionHandler;
+import com.example.retailplatform.user.common.UserExceptionHandler;
 import com.example.retailplatform.user.domain.model.Role;
 import com.example.retailplatform.user.domain.model.Status;
 import com.example.retailplatform.user.domain.model.User;
@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import({GlobalExceptionHandler.class, UserControllerIntegrationTest.MockBeans.class})
+@Import({UserExceptionHandler.class, UserControllerIntegrationTest.MockBeans.class})
 class UserControllerIntegrationTest {
 
     @Autowired

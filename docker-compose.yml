@@ -1,239 +1,166 @@
+# ===============================
+# Docker Compose for Retail Platform
+# Merged JWT Service + User Service
+# ===============================
+
 services:
-  # -----------------------------
-  # PostgreSQL for Keycloak
-  # -----------------------------
-  keycloak-db:
+
+  # ===============================
+  # Redis Service
+  # ===============================
+  redis:
+    image: redis:7
+    container_name: ${REDIS_SERVICE_NAME}
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"  # Optional: remove if not needed externally
+    networks:
+      - retail-platform
+    restart: unless-stopped
+    command: redis-server
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping || exit 1"]
+      interval: ${REDIS_HEALTHCHECK_INTERVAL}
+      timeout: ${REDIS_HEALTHCHECK_TIMEOUT}
+      retries: ${REDIS_HEALTHCHECK_RETRIES}
+
+  # ===============================
+  # User Database (Postgres)
+  # ===============================
+  user-db:
     image: postgres:15
-    container_name: keycloak-db
+    container_name: ${USER_DB_SERVICE_NAME}
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: keycloak
+      POSTGRES_DB: ${USER_DB_NAME}
+      POSTGRES_USER: ${USER_DB_USER}
+      POSTGRES_PASSWORD: ${USER_DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${USER_DB_PORT}:5432"
     volumes:
-      - keycloak-db-data:/var/lib/postgresql/data
+      - user-db-data:/var/lib/postgresql/data
     networks:
       - retail-platform
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      test: ["CMD-SHELL", "pg_isready -U ${USER_DB_USER} -d ${USER_DB_NAME}"]
       interval: 10s
       retries: 10
       timeout: 5s
 
-  # -----------------------------
-  # Keycloak
-  # -----------------------------
-  keycloak:
-    image: quay.io/keycloak/keycloak:21.1.1
-    container_name: keycloak
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_DB: postgres
-      KC_DB_URL_HOST: keycloak-db
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: keycloak
-      KC_DB_DATABASE: keycloak
-      KC_HEALTH_ENABLED: "true"
-    command: start-dev
-    ports:
-      - "8080:8080"
-    restart: unless-stopped
-    networks:
-      - retail-platform
-    depends_on:
-      keycloak-db:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://keycloak:8080/realms/master || exit 1"]
-      interval: 10s
-      retries: 10
-      timeout: 10s
-
-  # -----------------------------
-  # Auth Service
-  # -----------------------------
-  auth-service:
-    build:
-      context: .
-      dockerfile: auth-service/Dockerfile
-    container_name: auth-service
-    ports:
-      - "9082:9082"
-    depends_on:
-      keycloak:
-        condition: service_healthy
-    environment:
-      KEYCLOAK_URL: http://keycloak:8080
-      LOG_PATH: /app/logs
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
-      OTEL_METRICS_EXPORTER: "otlp"
-      OTEL_TRACES_EXPORTER: "otlp"
-      OTEL_RESOURCE_ATTRIBUTES: "service.name=auth-service"
-    restart: unless-stopped
-    volumes:
-      - maven-repo:/root/.m2
-      - ./auth-logs:/app/logs
-    networks:
-      - retail-platform
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://keycloak:8080/realms/master || exit 1"]
-      interval: 10s
-      retries: 10
-      timeout: 5s
-
-  # -----------------------------
+  # ===============================
   # User Service
-  # -----------------------------
+  # ===============================
   user-service:
     build:
       context: .
-      dockerfile: user-service/Dockerfile
-    container_name: user-service
+      dockerfile: ${USER_SERVICE_DOCKERFILE}
+    container_name: ${USER_SERVICE_NAME}
+    env_file:
+      - .env
     ports:
-      - "9083:9083"
+      - "${USER_SERVICE_PORT}:${USER_SERVICE_PORT}"
     depends_on:
-      keycloak:
-        condition: service_healthy
-      auth-service:
+      user-db:
         condition: service_healthy
     environment:
-      AUTH_SERVICE_URL: http://auth-service:9082
-      KEYCLOAK_URL: http://keycloak:8080
-      LOG_PATH: /app/logs
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
-      OTEL_METRICS_EXPORTER: "otlp"
-      OTEL_TRACES_EXPORTER: "otlp"
-      OTEL_RESOURCE_ATTRIBUTES: "service.name=user-service"
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      SPRING_DATASOURCE_URL: ${USER_DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${USER_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${USER_DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SERVER_PORT: ${USER_SERVICE_PORT}
+      OTEL_COLLECTOR_ENDPOINT: ${OTEL_COLLECTOR_ENDPOINT}
+      OBSERVABILITY_CORRELATION_ID_HEADER: ${OBSERVABILITY_CORRELATION_ID_HEADER}
+      OTEL_RESOURCE_ATTRIBUTES: ${OTEL_RESOURCE_ATTRIBUTES}
+      OTEL_METRICS_EXPORTER: ${OTEL_METRICS_EXPORTER}
+      OTEL_TRACES_EXPORTER: ${OTEL_TRACES_EXPORTER}
+      LOG_LEVEL_ROOT: ${USER_SERVICE_LOG_LEVEL_ROOT}
+      LOG_LEVEL_SPRING: ${USER_SERVICE_LOG_LEVEL_SPRING}
+      LOG_LEVEL_SPRING_SECURITY: ${USER_SERVICE_LOG_LEVEL_SPRING_SECURITY}
+      LOG_LEVEL_SPRING_SECURITY_WEB: ${USER_SERVICE_LOG_LEVEL_SPRING_SECURITY_WEB}
+      LOG_LEVEL_FILTER_CHAIN: ${USER_SERVICE_LOG_LEVEL_FILTER_CHAIN}
+      LOG_LEVEL_AUTHENTICATION: ${USER_SERVICE_LOG_LEVEL_AUTHENTICATION}
+      LOG_LEVEL_APP: ${USER_SERVICE_LOG_LEVEL_APP}
+      LOG_PATTERN_CONSOLE: ${USER_SERVICE_LOG_PATTERN_CONSOLE}
+      SPRINGDOC_API_DOCS_PATH: ${SPRINGDOC_API_DOCS_PATH}
+      SPRINGDOC_SWAGGER_UI_PATH: ${SPRINGDOC_SWAGGER_UI_PATH}
+      MANAGEMENT_ENDPOINTS: ${MANAGEMENT_ENDPOINTS}
+      MANAGEMENT_HEALTH_SHOW_DETAILS: ${MANAGEMENT_HEALTH_SHOW_DETAILS}
+      MANAGEMENT_PROMETHEUS_ACCESS: ${MANAGEMENT_PROMETHEUS_ACCESS}
+      MANAGEMENT_METRICS_ENABLED: ${MANAGEMENT_METRICS_ENABLED}
     restart: unless-stopped
     volumes:
       - maven-repo:/root/.m2
-      - ./user-logs:/app/logs
+      - ${USER_SERVICE_LOGS}:${USER_SERVICE_LOG_PATH}
     networks:
       - retail-platform
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://auth-service:9082/actuator/health || exit 1"]
-      interval: 10s
-      retries: 10
-      timeout: 5s
+      test: ["CMD-SHELL", "curl -f http://localhost:${USER_SERVICE_PORT}/actuator/health || exit 1"]
+      interval: ${USER_SERVICE_HEALTHCHECK_INTERVAL}
+      retries: ${USER_SERVICE_HEALTHCHECK_RETRIES}
+      timeout: ${USER_SERVICE_HEALTHCHECK_TIMEOUT}
 
-  # -----------------------------
-  # OpenTelemetry Collector
-  # -----------------------------
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.91.0
-    container_name: otel-collector
+  # ===============================
+  # JWT Service
+  # ===============================
+  jwt-service:
+    build:
+      context: .
+      dockerfile: ${JWT_SERVICE_DOCKERFILE}
+    container_name: ${JWT_SERVICE_NAME}
+    env_file:
+      - .env
     ports:
-      - "4317:4317"
-      - "4318:4318"
-      - "8889:8889"
-    volumes:
-      - ./otel-config.yml:/etc/otel-config.yml
-    command: ["--config=/etc/otel-config.yml"]
-    networks:
-      - retail-platform
-
-  # -----------------------------
-  # Tempo (Traces)
-  # -----------------------------
-  tempo:
-    image: grafana/tempo:2.7.0
-    container_name: tempo
-    ports:
-      - "3200:3200"
-    volumes:
-      - ./tempo-data:/tempo-data
-      - ./tempo-local-config.yaml:/etc/tempo/config.yaml
-    command: -config.file=/etc/tempo/config.yaml
-    networks:
-      - retail-platform
-
-  # -----------------------------
-  # Prometheus (Metrics)
-  # -----------------------------
-  prometheus:
-    image: prom/prometheus:v2.48.0
-    container_name: prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      - retail-platform
-
-  # -----------------------------
-  # Grafana (Dashboard)
-  # -----------------------------
-  grafana:
-    image: grafana/grafana:10.4.1
-    container_name: grafana
-    ports:
-      - "3000:3000"
+      - "${JWT_SERVICE_PORT}:${JWT_SERVICE_PORT}"
+    depends_on:
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-    volumes:
-      - grafana-storage:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
-    networks:
-      - retail-platform
-    depends_on:
-      - prometheus
-      - tempo
-      - loki
-
-  # -----------------------------
-  # Loki (Logs)
-  # -----------------------------
-  loki:
-    image: grafana/loki:2.9.3
-    container_name: loki
-    ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
-    volumes:
-      - ./loki-config.yaml:/etc/loki/local-config.yaml
-      - loki-data:/loki
+      REDIS_HOST: ${REDIS_SERVICE_NAME}
+      REDIS_PORT: ${REDIS_PORT}
+      USER_SERVICE_URL: ${USER_SERVICE_URL}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SERVER_PORT: ${JWT_SERVICE_PORT}
+      LOG_PATH: ${JWT_SERVICE_LOG_PATH}
+      LOG_LEVEL_ROOT: ${JWT_SERVICE_LOG_LEVEL_ROOT}
+      LOG_LEVEL_SPRING: ${JWT_SERVICE_LOG_LEVEL_SPRING}
+      LOG_LEVEL_SPRING_SECURITY: ${JWT_SERVICE_LOG_LEVEL_SPRING_SECURITY}
+      LOG_LEVEL_SPRING_SECURITY_WEB: ${JWT_SERVICE_LOG_LEVEL_SPRING_SECURITY_WEB}
+      LOG_LEVEL_FILTER_CHAIN: ${JWT_SERVICE_LOG_LEVEL_FILTER_CHAIN}
+      LOG_LEVEL_AUTHENTICATION: ${JWT_SERVICE_LOG_LEVEL_AUTHENTICATION}
+      LOG_LEVEL_APP: ${JWT_SERVICE_LOG_LEVEL_APP}
+      LOG_PATTERN_CONSOLE: ${JWT_SERVICE_LOG_PATTERN_CONSOLE}
     restart: unless-stopped
-    networks:
-      - retail-platform
-
-  # -----------------------------
-  # Promtail (Log collector)
-  # -----------------------------
-  promtail:
-    image: grafana/promtail:2.9.3
-    container_name: promtail
     volumes:
-      - ./promtail-config.yaml:/etc/promtail/config.yaml
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - ./auth-logs:/app/auth/logs
-      - ./user-logs:/app/user/logs
-      - promtail-positions:/promtail
-    command: -config.file=/etc/promtail/config.yaml
-    restart: unless-stopped
+      - maven-repo:/root/.m2
+      - ${JWT_SERVICE_LOGS}:${JWT_SERVICE_LOG_PATH}
     networks:
       - retail-platform
-    depends_on:
-      - loki
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${JWT_SERVICE_PORT}/actuator/health || exit 1"]
+      interval: ${JWT_SERVICE_HEALTHCHECK_INTERVAL}
+      retries: ${JWT_SERVICE_HEALTHCHECK_RETRIES}
+      timeout: ${JWT_SERVICE_HEALTHCHECK_TIMEOUT}
 
-# -----------------------------
+# ===============================
 # Volumes
-# -----------------------------
+# ===============================
 volumes:
+  user-db-data:
   maven-repo:
-  grafana-storage:
-  loki-data:
-  promtail-positions:
-  keycloak-db-data:
 
-# -----------------------------
+# ===============================
 # Networks
-# -----------------------------
+# ===============================
 networks:
   retail-platform:
-    driver: bridge
+    external: true

@@ -8,7 +8,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Builder.Default;
 
 @Data
 @NoArgsConstructor
@@ -48,4 +47,7 @@ public class UserRequest {
 
     @Schema(description = "Whether the user is active", example = "true")
     private Boolean active;
+
+    @Schema(description = "Whether the user must change their password on next login", example = "true")
+    private Boolean passwordChangeRequired;
 }

@@ -30,13 +30,15 @@ class UserEntityMapperTest {
                 new FieldUpdateTestData("status", Status.ACTIVE),
                 new FieldUpdateTestData("role", Role.ADMIN),
                 new FieldUpdateTestData("active", true),
-                new FieldUpdateTestData("active", false)
+                new FieldUpdateTestData("active", false),
+                new FieldUpdateTestData("passwordChangeRequired", true)
         );
     }
 
     @ParameterizedTest
     @MethodSource("provideFieldUpdateTestData")
     void updateEntityFromModel_individualFields(FieldUpdateTestData testData) {
+        // Build entity using actual fields
         UserEntity entity = UserEntity.builder()
                 .firstName("Old")
                 .lastName("Old")
@@ -45,9 +47,11 @@ class UserEntityMapperTest {
                 .phoneNumber("000")
                 .status(Status.INACTIVE)
                 .role(Role.USER)
-                .deleted(false)
+                .active(true)
+                .passwordChangeRequired(true)
                 .build();
 
+        // Build User model for test
         User user = User.builder()
                 .firstName("firstName".equals(testData.field) ? (String) testData.value : null)
                 .lastName("lastName".equals(testData.field) ? (String) testData.value : null)
@@ -57,10 +61,13 @@ class UserEntityMapperTest {
                 .status("status".equals(testData.field) ? (Status) testData.value : null)
                 .role("role".equals(testData.field) ? (Role) testData.value : null)
                 .active("active".equals(testData.field) ? (Boolean) testData.value : null)
+                .passwordChangeRequired("passwordChangeRequired".equals(testData.field) ? (Boolean) testData.value : null)
                 .build();
 
+        // Apply updates
         mapper.updateEntityFromModel(user, entity);
 
+        // Assertions
         switch (testData.field) {
             case "firstName" -> assertEquals(testData.value, entity.getFirstName());
             case "lastName" -> assertEquals(testData.value, entity.getLastName());
@@ -71,13 +78,19 @@ class UserEntityMapperTest {
             case "role" -> assertEquals(testData.value, entity.getRole());
             case "active" -> {
                 Boolean active = (Boolean) testData.value;
-                assertEquals(!active, entity.isDeleted(), "Active field should map to deleted correctly");
+                assertEquals(active != null ? active : true, entity.isActive(),
+                        "Active field should be updated correctly");
+            }
+            case "passwordChangeRequired" -> {
+                Boolean pwChange = (Boolean) testData.value;
+                assertEquals(pwChange != null ? pwChange : true, entity.isPasswordChangeRequired(),
+                        "passwordChangeRequired field should be updated correctly");
             }
             default -> fail("Unexpected field name: " + testData.field);
         }
     }
 
-    // Helper class to hold field name and value
+    // Helper class for field/value pairs
     private static class FieldUpdateTestData {
         final String field;
         final Object value;

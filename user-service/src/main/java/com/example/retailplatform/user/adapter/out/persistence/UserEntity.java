@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Builder.Default;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -34,7 +35,7 @@ public class UserEntity {
     @Column(nullable = false)
     private String lastName;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
@@ -42,7 +43,7 @@ public class UserEntity {
 
     @Column(nullable = false)
     @Default
-    private boolean deleted = false;
+    private boolean active = true; // default active for new users
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -53,12 +54,25 @@ public class UserEntity {
     private Role role;
 
     @JsonIgnore
-    @Column(nullable = true)    
-    private String password; // hashed password
+    @Column(nullable = true)
+    private String password;
 
-    private String createdBy;
+    @Column(nullable = false)
+    @Default
+    private boolean passwordChangeRequired = true; // always true by default
+
+    @Column(nullable = false)
+    @Default
+    private String createdBy = UserConstants.SYSTEM;
+
+    @Column(nullable = false)
     private LocalDateTime createdAt;
-    private String updatedBy;
+
+    @Column(nullable = false)
+    @Default
+    private String updatedBy = UserConstants.SYSTEM;
+
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist
@@ -66,20 +80,26 @@ public class UserEntity {
         LocalDateTime now = LocalDateTime.now();
         createdAt = now;
         updatedAt = now;
-        if (createdBy == null) createdBy = UserConstants.SYSTEM;
-        if (updatedBy == null) updatedBy = UserConstants.SYSTEM;
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-        if (updatedBy == null) updatedBy = UserConstants.SYSTEM;
     }
 
     public void softDelete() {
-        this.deleted = true;
+        this.active = false; // set inactive on deletion
         this.status = Status.DELETED;
-        this.updatedAt = LocalDateTime.now();
-        this.updatedBy = UserConstants.SYSTEM;
+        onUpdate();
+    }
+
+    public void markPasswordChangeRequired() {
+        this.passwordChangeRequired = true;
+        onUpdate();
+    }
+
+    public void clearPasswordChangeRequired() {
+        this.passwordChangeRequired = false;
+        onUpdate();
     }
 }

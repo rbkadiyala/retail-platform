@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,22 +25,35 @@ public class UserDetailsServiceAdapter implements UserDetailsService {
     private final UserRepositoryPort userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        log.debug("Attempting to load user: {}", username);
+    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
+        log.debug("Attempting to load user: {}", identifier);
 
-        User user = userRepository.findActiveByUsername(username)
-                .orElseThrow(() -> {
-                    log.warn("User {} not found or cannot authenticate locally", username);
-                    return new UsernameNotFoundException(
-                            "User not found or cannot authenticate locally: " + username);
-                });
+        Optional<User> userOpt = resolveUser(identifier);
 
+        User user = userOpt.orElseThrow(() -> {
+            log.warn("User not found for identifier: {}", identifier);
+            return new UsernameNotFoundException("User not found: " + identifier);
+        });
+        
         return new CustomUserDetails(
                 user.getUsername(),
                 user.getPassword(), // hashed password
                 List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())),
                 "ACTIVE".equalsIgnoreCase(user.getStatus().name())
         );
+    }
+
+    private Optional<User> resolveUser(String identifier) {
+        if (identifier.contains("@")) {
+            // Looks like email
+            return userRepository.findActiveByEmail(identifier);
+        } else if (identifier.matches("\\d+")) {
+            // Looks like phone number (digits only)
+            return userRepository.findActiveByPhoneNumber(identifier);
+        } else {
+            // Default to username
+            return userRepository.findActiveByUsername(identifier);
+        }
     }
 
 

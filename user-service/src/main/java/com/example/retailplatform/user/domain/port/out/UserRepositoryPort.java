@@ -26,4 +26,7 @@ public interface UserRepositoryPort {
 
     // -------------------- Delete --------------------
     void softDelete(String id);
+
+    // -------------------- Search --------------------
+    List<User> searchActiveUsers(String username, String email, String phoneNumber);
 }

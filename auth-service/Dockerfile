@@ -46,5 +46,11 @@ COPY --from=build /app/auth-service/target/auth-service-1.0.0.jar auth-service.j
 # ----------------------
 RUN mkdir -p /app/logs && chmod -R 777 /app/logs
 
+# Expose service port
 EXPOSE 9082
+
+# Spring Boot environment
+ENV SPRING_PROFILES_ACTIVE=default
+
+# Run the application
 ENTRYPOINT ["java", "-jar", "auth-service.jar"]

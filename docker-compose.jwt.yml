@@ -1,44 +1,66 @@
+version: '3.9'
+
 services:
   redis:
     image: redis:7
-    container_name: redis
+    container_name: ${REDIS_SERVICE_NAME}
+    env_file:
+      - .env
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:${REDIS_PORT}"
     networks:
       - retail-platform
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli ping"]
+      interval: ${REDIS_HEALTHCHECK_INTERVAL}
+      timeout: ${REDIS_HEALTHCHECK_TIMEOUT}
+      retries: ${REDIS_HEALTHCHECK_RETRIES}
 
   jwt-service:
     build:
       context: .
-      dockerfile: jwt-service/Dockerfile
-    container_name: jwt-service
+      dockerfile: ${JWT_SERVICE_DOCKERFILE}
+    container_name: ${JWT_SERVICE_NAME}
+    env_file:
+      - .env
     ports:
-      - "9084:9084"
+      - "${JWT_SERVICE_PORT}:${JWT_SERVICE_PORT}"
     depends_on:
       redis:
         condition: service_healthy
     environment:
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      LOG_PATH: /app/logs
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: "true"
+      REDIS_HOST: ${REDIS_SERVICE_NAME}
+      REDIS_PORT: ${REDIS_PORT}
+      LOG_PATH: ${JWT_SERVICE_LOG_PATH}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SERVER_PORT: ${JWT_SERVICE_PORT}
+      USER_SERVICE_URL: ${USER_SERVICE_URL}
+      LOG_LEVEL_ROOT: ${JWT_SERVICE_LOG_LEVEL_ROOT}
+      LOG_LEVEL_SPRING: ${JWT_SERVICE_LOG_LEVEL_SPRING}
+      LOG_LEVEL_SPRING_SECURITY: ${JWT_SERVICE_LOG_LEVEL_SPRING_SECURITY}
+      LOG_LEVEL_SPRING_SECURITY_WEB: ${JWT_SERVICE_LOG_LEVEL_SPRING_SECURITY_WEB}
+      LOG_LEVEL_FILTER_CHAIN: ${JWT_SERVICE_LOG_LEVEL_FILTER_CHAIN}
+      LOG_LEVEL_AUTHENTICATION: ${JWT_SERVICE_LOG_LEVEL_AUTHENTICATION}
+      LOG_LEVEL_APP: ${JWT_SERVICE_LOG_LEVEL_APP}
+      LOG_PATTERN_CONSOLE: ${JWT_SERVICE_LOG_PATTERN_CONSOLE}
     restart: unless-stopped
     volumes:
       - maven-repo:/root/.m2
-      - ./jwt-logs:/app/logs
+      - ${JWT_SERVICE_LOGS}:${JWT_SERVICE_LOG_PATH}
     networks:
       - retail-platform
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9084/actuator/health || exit 1"]
-      interval: 10s
-      retries: 10
-      timeout: 5s
+      test: ["CMD-SHELL", "curl -f http://${JWT_SERVICE_NAME}:${JWT_SERVICE_PORT}/actuator/health || exit 1"]
+      interval: ${JWT_SERVICE_HEALTHCHECK_INTERVAL}
+      retries: ${JWT_SERVICE_HEALTHCHECK_RETRIES}
+      timeout: ${JWT_SERVICE_HEALTHCHECK_TIMEOUT}
 
 volumes:
   maven-repo:
 
 networks:
   retail-platform:
-    external: true
+    driver: bridge

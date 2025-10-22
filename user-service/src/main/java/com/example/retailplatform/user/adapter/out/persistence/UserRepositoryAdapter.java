@@ -102,6 +102,15 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
         });
     }
 
+    @Override
+    public List<User> searchActiveUsers(String username, String email, String phoneNumber) {
+        // Delegate to JPA repository method, mapping entities to domain models
+        return jpaRepository.searchActiveUsers(username, email, phoneNumber)
+                .stream()
+                .map(entityMapper::toModel)
+                .toList();
+    }
+
     // ------------------ Helper Methods ------------------
 
     private Long parseId(String id) {

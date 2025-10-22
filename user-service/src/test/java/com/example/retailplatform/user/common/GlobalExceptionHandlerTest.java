@@ -24,13 +24,13 @@ import static org.mockito.Mockito.*;
 class GlobalExceptionHandlerTest {
 
     private MessageSource messageSource;
-    private GlobalExceptionHandler handler;
+    private UserExceptionHandler handler;
     private HttpServletRequest request;
 
     @BeforeEach
     void setUp() {
         messageSource = mock(MessageSource.class);
-        handler = new GlobalExceptionHandler(messageSource);
+        handler = new UserExceptionHandler(messageSource);
         request = mock(HttpServletRequest.class);
 
         when(request.getRequestURI()).thenReturn(UserConstants.REQUEST_URI);

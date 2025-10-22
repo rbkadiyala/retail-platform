@@ -4,7 +4,6 @@ import com.example.retailplatform.user.common.ErrorResponse;
 import com.example.retailplatform.user.domain.UserConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
@@ -54,7 +53,8 @@ public class SecurityConfig {
                         "/actuator/info",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
-                        "/swagger-ui.html"
+                        "/swagger-ui.html",
+                        "/api/users/authenticate"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

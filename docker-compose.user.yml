@@ -1,13 +1,15 @@
 services:
   user-db:
     image: postgres:15
-    container_name: user-db
+    container_name: ${USER_DB_SERVICE_NAME}
+    env_file:
+      - .env
     environment:
       POSTGRES_DB: ${USER_DB_NAME}
       POSTGRES_USER: ${USER_DB_USER}
       POSTGRES_PASSWORD: ${USER_DB_PASSWORD}
     ports:
-      - "5433:5432"
+      - "${USER_DB_PORT}:5432"
     volumes:
       - user-db-data:/var/lib/postgresql/data
     networks:
@@ -21,15 +23,20 @@ services:
 
   user-service:
     build:
-      context: .                      
+      context: .
       dockerfile: user-service/Dockerfile
-    container_name: user-service
+    container_name: ${USER_SERVICE_NAME}
+    env_file:
+      - .env
     ports:
       - "${USER_SERVICE_PORT}:${USER_SERVICE_PORT}"
     depends_on:
       user-db:
         condition: service_healthy
     environment:
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
       SPRING_DATASOURCE_URL: ${USER_DB_URL}
       SPRING_DATASOURCE_USERNAME: ${USER_DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${USER_DB_PASSWORD}
@@ -37,12 +44,46 @@ services:
       SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
       SERVER_PORT: ${USER_SERVICE_PORT}
       OTEL_COLLECTOR_ENDPOINT: ${OTEL_COLLECTOR_ENDPOINT}
+      LOG_LEVEL_ROOT: ${LOG_LEVEL_ROOT}
+      LOG_LEVEL_SPRING: ${LOG_LEVEL_SPRING}
+      LOG_LEVEL_SPRING_SECURITY: ${LOG_LEVEL_SPRING_SECURITY}
+      LOG_LEVEL_SPRING_SECURITY_WEB: ${LOG_LEVEL_SPRING_SECURITY_WEB}
+      LOG_LEVEL_FILTER_CHAIN: ${LOG_LEVEL_FILTER_CHAIN}
+      LOG_LEVEL_AUTHENTICATION: ${LOG_LEVEL_AUTHENTICATION}
+      LOG_LEVEL_APP: ${LOG_LEVEL_APP}
+      LOG_PATTERN_CONSOLE: ${LOG_PATTERN_CONSOLE}
+      SPRINGDOC_API_DOCS_PATH: ${SPRINGDOC_API_DOCS_PATH}
+      SPRINGDOC_SWAGGER_UI_PATH: ${SPRINGDOC_SWAGGER_UI_PATH}
+      MANAGEMENT_ENDPOINTS: ${MANAGEMENT_ENDPOINTS}
+      MANAGEMENT_HEALTH_SHOW_DETAILS: ${MANAGEMENT_HEALTH_SHOW_DETAILS}
+      MANAGEMENT_PROMETHEUS_ACCESS: ${MANAGEMENT_PROMETHEUS_ACCESS}
+      MANAGEMENT_METRICS_ENABLED: ${MANAGEMENT_METRICS_ENABLED}
+      OBSERVABILITY_CORRELATION_ID_HEADER: ${OBSERVABILITY_CORRELATION_ID_HEADER}
+      OTEL_RESOURCE_ATTRIBUTES: ${OTEL_RESOURCE_ATTRIBUTES}
+      OTEL_METRICS_EXPORTER: ${OTEL_METRICS_EXPORTER}
+      OTEL_TRACES_EXPORTER: ${OTEL_TRACES_EXPORTER}
     restart: unless-stopped
     volumes:
       - maven-repo:/root/.m2
-      - ./user-logs:/app/logs   # Persist logs
+      - ./user-logs:/app/logs
     networks:
       - retail-platform
+
+  redis:
+    image: redis:7
+    container_name: ${REDIS_SERVICE_NAME}
+    env_file:
+      - .env
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    networks:
+      - retail-platform
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 volumes:
   user-db-data:
